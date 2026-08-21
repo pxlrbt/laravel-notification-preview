@@ -1,0 +1,24 @@
+version: 2
+
+updates:
+  # The workflows pin actions to a commit SHA, which never goes stale on its own.
+  # Dependabot moves the SHA and keeps the trailing version comment in step.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns:
+          - '*'
+
+  # composer.lock is not committed and CI runs `composer update`, so this only
+  # fires when a new major falls outside a constraint in composer.json.
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      php-dependencies:
+        patterns:
+          - '*'
