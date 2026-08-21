@@ -48,7 +48,7 @@ class NotificationInspector
     public function describe(string $class, ?string $variant = null, array $overrides = []): array
     {
         $reflection = new ReflectionClass($class);
-        $variants = array_keys($this->registry->variantsFor($class));
+        $variants = $this->registry->variantsFor($class);
 
         $details = [
             'class' => $class,
@@ -56,7 +56,10 @@ class NotificationInspector
             'label' => $this->registry->labelFor($class) ?? $this->humanize(class_basename($class)),
             'group' => $this->registry->groupFor($class),
             'path' => $this->relativePath($reflection->getFileName() ?: ''),
-            'variants' => $variants,
+            'variants' => array_values(array_map(fn (Variant $variant) => [
+                'value' => $variant->key,
+                'label' => $variant->resolveLabel(),
+            ], $variants)),
             'queued' => $reflection->implementsInterface(ShouldQueue::class),
             'params' => $variants === [] ? $this->params($class, $overrides) : [],
             'subject' => null,

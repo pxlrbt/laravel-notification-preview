@@ -123,12 +123,12 @@ it('ignores overrides for parameters that cannot round-trip through a query stri
 
 it('short circuits reflection when a variant is registered', function () {
     NotificationPreview::variants(ScalarNotification::class, [
-        Variant::make('Custom', fn () => new ScalarNotification(
+        Variant::make('custom', fn () => new ScalarNotification(
             'Registered', '', '', '', '', 1, 1.0, false, [], StatusEnum::Shipped, Carbon::now(),
         )),
     ]);
 
-    expect($this->factory->make(ScalarNotification::class, 'Custom'))->customerName->toBe('Registered');
+    expect($this->factory->make(ScalarNotification::class, 'custom'))->customerName->toBe('Registered');
 });
 
 it('uses the first variant when none is selected', function () {
@@ -136,13 +136,13 @@ it('uses the first variant when none is selected', function () {
 });
 
 it('picks up variants declared on the notification itself', function () {
-    expect($this->factory->make(SelfDescribingNotification::class, 'Formal'))->tone->toBe('formal');
+    expect($this->factory->make(SelfDescribingNotification::class, 'formal'))->tone->toBe('formal');
 });
 
 it('lets registered variants override ones declared on the notification', function () {
     NotificationPreview::variants(SelfDescribingNotification::class, [
-        Variant::make('Formal', fn () => new SelfDescribingNotification('registered')),
+        Variant::make('formal', fn () => new SelfDescribingNotification('registered')),
     ]);
 
-    expect($this->factory->make(SelfDescribingNotification::class, 'Formal'))->tone->toBe('registered');
+    expect($this->factory->make(SelfDescribingNotification::class, 'formal'))->tone->toBe('registered');
 });

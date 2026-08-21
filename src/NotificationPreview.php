@@ -93,7 +93,7 @@ class NotificationPreview
     public function variants(string $notification, array $variants): static
     {
         foreach ($variants as $variant) {
-            $this->variants[$notification][$variant->label] = $variant;
+            $this->variants[$notification][$variant->key] = $variant;
         }
 
         return $this;
@@ -112,7 +112,7 @@ class NotificationPreview
             $declared = $notification::previewVariants();
 
             foreach ($declared as $variant) {
-                $registered[$variant->label] ??= $variant;
+                $registered[$variant->key] ??= $variant;
             }
         }
 

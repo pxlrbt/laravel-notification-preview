@@ -249,11 +249,11 @@
                 const variants = state.selected?.variants || [];
                 variantSelect.hidden = variants.length < 2;
                 variantSelect.innerHTML = '';
-                variants.forEach((name) => {
+                variants.forEach((variant) => {
                     const option = document.createElement('option');
-                    option.value = name;
-                    option.textContent = name;
-                    option.selected = name === state.variant;
+                    option.value = variant.value;
+                    option.textContent = variant.label;
+                    option.selected = variant.value === state.variant;
                     variantSelect.appendChild(option);
                 });
             }
@@ -342,7 +342,7 @@
                     row('Template', item.view),
                     row('Channels', (item.channels || []).join(', ')),
                     row('Queued', item.queued ? 'yes' : 'no'),
-                    row('Variants', (item.variants || []).join(', ')),
+                    row('Variants', (item.variants || []).map((variant) => variant.label).join(', ')),
                 );
 
                 const metaHeading = document.createElement('h2');
@@ -463,7 +463,7 @@
 
             function select(item) {
                 state.selected = item;
-                state.variant = item.variants[0] || null;
+                state.variant = (item.variants[0] || {}).value || null;
                 state.format = (item.formats[0] || {}).value || 'html';
                 state.values = {};
                 renderFormats();

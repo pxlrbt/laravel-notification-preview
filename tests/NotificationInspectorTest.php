@@ -9,6 +9,7 @@ use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\BrokenNotific
 use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Nested\DeepNotification;
 use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ScalarNotification;
 use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\SelfDescribingNotification;
+use pxlrbt\LaravelNotificationPreview\Variant;
 
 beforeEach(fn () => $this->inspector = app(NotificationInspector::class));
 
@@ -41,8 +42,30 @@ it('uses registered labels and groups', function () {
 
 it('lists variants and skips parameter editing for them', function () {
     expect($this->inspector->describe(SelfDescribingNotification::class))
-        ->variants->toBe(['Friendly', 'Formal'])
+        ->variants->toBe([
+            ['value' => 'friendly', 'label' => 'Friendly'],
+            ['value' => 'formal', 'label' => 'Formal'],
+        ])
         ->params->toBe([]);
+});
+
+it('overrides the derived label, deferring a closure until it renders', function () {
+    // Arrange
+    app()->setLocale('de');
+
+    NotificationPreview::variants(DeepNotification::class, [
+        Variant::make('plain-string', fn () => new DeepNotification)->label('Explicit label'),
+        Variant::make('deferred', fn () => new DeepNotification)->label(fn () => 'Locale: '.app()->getLocale()),
+    ]);
+
+    // Act
+    $variants = $this->inspector->describe(DeepNotification::class)['variants'];
+
+    // Assert
+    expect($variants)->toBe([
+        ['value' => 'plain-string', 'label' => 'Explicit label'],
+        ['value' => 'deferred', 'label' => 'Locale: de'],
+    ]);
 });
 
 it('marks scalar parameters editable and objects read only', function () {

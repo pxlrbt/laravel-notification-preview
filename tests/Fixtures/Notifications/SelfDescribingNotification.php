@@ -18,8 +18,8 @@ class SelfDescribingNotification extends Notification
     public static function previewVariants(): array
     {
         return [
-            Variant::make('Friendly', fn () => new self('friendly')),
-            Variant::make('Formal', fn () => new self('formal')),
+            Variant::make('friendly', fn () => new self('friendly')),
+            Variant::make('formal', fn () => new self('formal')),
         ];
     }
 

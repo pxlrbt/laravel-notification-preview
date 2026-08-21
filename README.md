@@ -165,16 +165,26 @@ finished notification and skips argument resolution entirely:
 use pxlrbt\LaravelNotificationPreview\Variant;
 
 NotificationPreview::variants(OrderCancelled::class, [
-    Variant::make('By customer', fn () => (new OrderCancelled($order))->setReason('customer')),
-    Variant::make('By us', fn () => (new OrderCancelled($order))->setReason('internal')),
+    Variant::make('by-customer', fn () => (new OrderCancelled($order))->setReason('customer')),
+    Variant::make('by-us', fn () => (new OrderCancelled($order))->setReason('internal')),
 ]);
+```
+
+The first argument is the key the preview identifies the variant by; its label is
+derived from it, so `by-customer` shows as "By Customer". Set your own with
+`label()`, as a string or as a closure that defers a translation until the
+variant is rendered:
+
+```php
+Variant::make('by-customer', $factory)->label('Cancelled by the customer');
+Variant::make('by-customer', $factory)->label(fn () => __('variants.by_customer'));
 ```
 
 Variants can pin their own notifiable:
 
 ```php
 NotificationPreview::variants(OrderShipped::class, [
-    Variant::make('To the buyer', fn () => new OrderShipped($order))
+    Variant::make('to-the-buyer', fn () => new OrderShipped($order))
         ->notifiable(fn () => User::factory()->make(['id' => 2])),
 ]);
 ```
@@ -192,8 +202,8 @@ class OrderShipped extends Notification
     public static function previewVariants(): array
     {
         return [
-            Variant::make('Express', fn () => new self(Order::factory()->express()->make())),
-            Variant::make('Standard', fn () => new self(Order::factory()->make())),
+            Variant::make('express', fn () => new self(Order::factory()->express()->make())),
+            Variant::make('standard', fn () => new self(Order::factory()->make())),
         ];
     }
 }
