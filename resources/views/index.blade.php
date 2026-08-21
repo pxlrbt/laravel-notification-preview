@@ -125,6 +125,17 @@
             const PREVIEW_URL = @json(route('notification-viewer.preview'));
             const VIEWPORTS = { desktop: '100%', tablet: '640px', mobile: '390px' };
 
+            const KINDS = {
+                notification: {
+                    label: 'Notification',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>',
+                },
+                mailable: {
+                    label: 'Mailable',
+                    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="m2 7 9.2 5.6a1.5 1.5 0 0 0 1.6 0L22 7"/></svg>',
+                },
+            };
+
             const state = {
                 selected: ENTRIES[0] || null,
                 variation: null,
@@ -202,13 +213,20 @@
 
                     const title = document.createElement('div');
                     title.className = 'nv-item-title';
-                    title.textContent = item.label;
 
-                    if (item.kind === 'mailable') {
-                        const kind = document.createElement('span');
-                        kind.className = 'nv-kind';
-                        kind.textContent = 'Mailable';
-                        title.appendChild(kind);
+                    const label = document.createElement('span');
+                    label.textContent = item.label;
+                    title.appendChild(label);
+
+                    const kind = KINDS[item.kind];
+
+                    if (kind) {
+                        const badge = document.createElement('span');
+                        badge.className = 'nv-kind';
+                        badge.title = kind.label;
+                        badge.setAttribute('aria-label', kind.label);
+                        badge.innerHTML = kind.icon;
+                        title.appendChild(badge);
                     }
 
                     const subject = document.createElement('div');
@@ -309,11 +327,15 @@
                     body.appendChild(banner);
                 }
 
+                if (item.params.length) {
+                    body.append(paramsHeading(), paramsTable(item));
+                }
+
                 const meta = document.createElement('table');
                 meta.className = 'nv-table';
                 meta.append(
                     row('Class', item.class),
-                    row('Kind', item.kind === 'mailable' ? 'Mailable' : 'Notification'),
+                    row('Kind', KINDS[item.kind]?.label ?? item.kind),
                     row('File', item.path),
                     row('Subject', item.subject),
                     row('From', item.from),
@@ -324,13 +346,18 @@
                 );
 
                 const metaHeading = document.createElement('h2');
-                metaHeading.textContent = 'Notification';
+                metaHeading.textContent = KINDS[item.kind]?.label ?? 'Details';
                 body.append(metaHeading, meta);
+            }
 
-                if (!item.params.length) return;
+            function paramsHeading() {
+                const heading = document.createElement('h2');
+                heading.textContent = 'Constructor parameters';
 
-                const paramsHeading = document.createElement('h2');
-                paramsHeading.textContent = 'Constructor parameters';
+                return heading;
+            }
+
+            function paramsTable(item) {
                 const params = document.createElement('table');
                 params.className = 'nv-table';
 
@@ -358,7 +385,7 @@
                     params.appendChild(tr);
                 });
 
-                body.append(paramsHeading, params);
+                return params;
             }
 
             function refreshPreview() {

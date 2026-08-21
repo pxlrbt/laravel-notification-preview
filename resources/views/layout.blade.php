@@ -152,21 +152,27 @@
 
         .nv-item-title {
             display: flex;
-            align-items: baseline;
-            gap: 8px;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
             font-weight: 600;
             color: var(--nv-text);
         }
 
         .nv-kind {
-            padding: 1px 7px;
-            border-radius: 999px;
-            background: var(--nv-muted);
+            display: grid;
+            place-items: center;
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
             border: 1px solid var(--nv-border-strong);
-            font-size: 11px;
-            font-weight: 500;
+            border-radius: 6px;
+            background: var(--nv-muted);
             color: var(--nv-text-soft);
+            cursor: help;
         }
+
+        .nv-kind svg { width: 13px; height: 13px; }
 
         .nv-item-subject {
             margin-top: 2px;
