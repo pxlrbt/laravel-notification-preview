@@ -17,8 +17,8 @@ class NotificationViewer
     /** @var array<string, Closure> */
     protected array $resolvers = [];
 
-    /** @var array<class-string, array<string, Variation>> */
-    protected array $variations = [];
+    /** @var array<class-string, array<string, Variant>> */
+    protected array $variants = [];
 
     /** @var array<class-string, string> */
     protected array $groups = [];
@@ -60,19 +60,19 @@ class NotificationViewer
     }
 
     /**
-     * Registers named variations for a notification. Each closure must return a
+     * Registers named variants for a notification. Each closure must return a
      * fully constructed notification, which lets you call setters that the
      * constructor does not cover.
      *
-     * @param  array<string, Closure|Variation>  $variations
+     * @param  array<string, Closure|Variant>  $variants
      * @param  class-string  $notification
      */
-    public function variations(string $notification, array $variations): static
+    public function variants(string $notification, array $variants): static
     {
-        foreach ($variations as $label => $variation) {
-            $this->variations[$notification][$label] = $variation instanceof Variation
-                ? $variation
-                : Variation::make($label, $variation);
+        foreach ($variants as $label => $variant) {
+            $this->variants[$notification][$label] = $variant instanceof Variant
+                ? $variant
+                : Variant::make($label, $variant);
         }
 
         return $this;
@@ -80,20 +80,20 @@ class NotificationViewer
 
     /**
      * @param  class-string  $notification
-     * @return array<string, Variation>
+     * @return array<string, Variant>
      */
-    public function variationsFor(string $notification): array
+    public function variantsFor(string $notification): array
     {
-        $registered = $this->variations[$notification] ?? [];
+        $registered = $this->variants[$notification] ?? [];
 
-        if (method_exists($notification, 'previewVariations')) {
-            /** @var array<string, Closure|Variation> $declared */
-            $declared = $notification::previewVariations();
+        if (method_exists($notification, 'previewVariants')) {
+            /** @var array<string, Closure|Variant> $declared */
+            $declared = $notification::previewVariants();
 
-            foreach ($declared as $label => $variation) {
-                $registered[$label] ??= $variation instanceof Variation
-                    ? $variation
-                    : Variation::make($label, $variation);
+            foreach ($declared as $label => $variant) {
+                $registered[$label] ??= $variant instanceof Variant
+                    ? $variant
+                    : Variant::make($label, $variant);
             }
         }
 
@@ -137,7 +137,7 @@ class NotificationViewer
     }
 
     /**
-     * The notifiable that notifications are rendered against when a variation
+     * The notifiable that notifications are rendered against when a variant
      * does not provide its own.
      */
     public function notifiable(Closure $factory): static
@@ -318,7 +318,7 @@ class NotificationViewer
     public function flush(): void
     {
         $this->resolvers = [];
-        $this->variations = [];
+        $this->variants = [];
         $this->groups = [];
         $this->labels = [];
         $this->registered = [];

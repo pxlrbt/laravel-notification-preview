@@ -39,9 +39,9 @@ it('uses registered labels and groups', function () {
         ->group->toBe('Custom group');
 });
 
-it('lists variations and skips parameter editing for them', function () {
+it('lists variants and skips parameter editing for them', function () {
     expect($this->inspector->describe(SelfDescribingNotification::class))
-        ->variations->toBe(['Friendly', 'Formal'])
+        ->variants->toBe(['Friendly', 'Formal'])
         ->params->toBe([]);
 });
 

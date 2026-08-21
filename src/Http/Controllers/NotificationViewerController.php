@@ -115,11 +115,11 @@ class NotificationViewerController extends Controller
      */
     protected function resolve(Request $request, string $class): array
     {
-        $variation = $request->input('variation') ?: null;
-        $variation = is_string($variation) ? $variation : null;
+        $variant = $request->input('variant') ?: null;
+        $variant = is_string($variant) ? $variant : null;
 
-        $previewable = $this->factory->make($class, $variation, $this->overrides($request));
-        $notifiable = $this->inspector->notifiableFor($class, $variation);
+        $previewable = $this->factory->make($class, $variant, $this->overrides($request));
+        $notifiable = $this->inspector->notifiableFor($class, $variant);
         $locale = $request->input('locale');
 
         if (is_string($locale) && $locale !== '') {

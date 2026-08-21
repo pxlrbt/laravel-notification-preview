@@ -31,16 +31,16 @@ class NotificationFactory
      * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      */
-    public function make(string $class, ?string $variation = null, array $overrides = []): Notification|Mailable
+    public function make(string $class, ?string $variant = null, array $overrides = []): Notification|Mailable
     {
-        $variations = $this->viewer->variationsFor($class);
+        $variants = $this->viewer->variantsFor($class);
 
-        if ($variation !== null && isset($variations[$variation])) {
-            return $variations[$variation]->resolve();
+        if ($variant !== null && isset($variants[$variant])) {
+            return $variants[$variant]->resolve();
         }
 
-        if ($variation === null && $variations !== []) {
-            return reset($variations)->resolve();
+        if ($variant === null && $variants !== []) {
+            return reset($variants)->resolve();
         }
 
         return $this->makeFromConstructor($class, $overrides);

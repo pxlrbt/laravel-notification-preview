@@ -8,11 +8,11 @@ use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 use pxlrbt\LaravelNotificationViewer\NotificationViewer as NotificationViewerManager;
-use pxlrbt\LaravelNotificationViewer\Variation;
+use pxlrbt\LaravelNotificationViewer\Variant;
 
 /**
  * @method static NotificationViewerManager resolve(string $key, Closure $resolver)
- * @method static NotificationViewerManager variations(string $notification, array<string, Closure|Variation> $variations)
+ * @method static NotificationViewerManager variants(string $notification, array<string, Closure|Variant> $variants)
  * @method static NotificationViewerManager group(string $notification, string $group)
  * @method static NotificationViewerManager label(string $notification, string $label)
  * @method static NotificationViewerManager notifiable(Closure $factory)

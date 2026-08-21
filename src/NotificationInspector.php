@@ -45,10 +45,10 @@ class NotificationInspector
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
-    public function describe(string $class, ?string $variation = null, array $overrides = []): array
+    public function describe(string $class, ?string $variant = null, array $overrides = []): array
     {
         $reflection = new ReflectionClass($class);
-        $variations = array_keys($this->viewer->variationsFor($class));
+        $variants = array_keys($this->viewer->variantsFor($class));
 
         $details = [
             'class' => $class,
@@ -56,9 +56,9 @@ class NotificationInspector
             'label' => $this->viewer->labelFor($class) ?? $this->humanize(class_basename($class)),
             'group' => $this->viewer->groupFor($class),
             'path' => $this->relativePath($reflection->getFileName() ?: ''),
-            'variations' => $variations,
+            'variants' => $variants,
             'queued' => $reflection->implementsInterface(ShouldQueue::class),
-            'params' => $variations === [] ? $this->params($class, $overrides) : [],
+            'params' => $variants === [] ? $this->params($class, $overrides) : [],
             'subject' => null,
             'from' => null,
             'view' => null,
@@ -68,8 +68,8 @@ class NotificationInspector
 
         try {
             $rendered = $this->renderer->render(
-                $this->factory->make($class, $variation, $overrides),
-                $this->notifiableFor($class, $variation),
+                $this->factory->make($class, $variant, $overrides),
+                $this->notifiableFor($class, $variant),
             );
 
             $details['subject'] = $rendered['subject'];
@@ -86,12 +86,12 @@ class NotificationInspector
     /**
      * @param  class-string  $class
      */
-    public function notifiableFor(string $class, ?string $variation = null): object
+    public function notifiableFor(string $class, ?string $variant = null): object
     {
-        $variations = $this->viewer->variationsFor($class);
-        $selected = $variation !== null
-            ? ($variations[$variation] ?? null)
-            : ($variations === [] ? null : reset($variations));
+        $variants = $this->viewer->variantsFor($class);
+        $selected = $variant !== null
+            ? ($variants[$variant] ?? null)
+            : ($variants === [] ? null : reset($variants));
 
         return $selected?->resolveNotifiable() ?? $this->viewer->resolveNotifiable();
     }

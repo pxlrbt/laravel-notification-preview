@@ -5,7 +5,7 @@ Browse, preview and test-send every notification and mailable in your Laravel ap
 The viewer scans the configured directories, builds each class by resolving its
 constructor arguments from their types, and renders the mail it produces. Classes
 whose arguments reflection cannot guess get their data from resolvers or
-variations you register.
+variants you register.
 
 ![Screenshot](.github/screenshot.png)
 
@@ -119,39 +119,39 @@ The notifiable that notifications are rendered against works the same way:
 NotificationViewer::notifiable(fn () => User::factory()->make(['id' => 1]));
 ```
 
-### Variations
+### Variants
 
 When a notification needs more than constructor arguments — setters, a specific
-state, a particular payload — register named variations. A variation returns the
+state, a particular payload — register named variants. A variant returns the
 finished notification and skips argument resolution entirely:
 
 ```php
-NotificationViewer::variations(OrderCancelled::class, [
+NotificationViewer::variants(OrderCancelled::class, [
     'By customer' => fn () => (new OrderCancelled($order))->setReason('customer'),
     'By us' => fn () => (new OrderCancelled($order))->setReason('internal'),
 ]);
 ```
 
-Variations can pin their own notifiable:
+Variants can pin their own notifiable:
 
 ```php
-use pxlrbt\LaravelNotificationViewer\Variation;
+use pxlrbt\LaravelNotificationViewer\Variant;
 
-NotificationViewer::variations(OrderShipped::class, [
-    'To the buyer' => Variation::make('To the buyer', fn () => new OrderShipped($order))
+NotificationViewer::variants(OrderShipped::class, [
+    'To the buyer' => Variant::make('To the buyer', fn () => new OrderShipped($order))
         ->notifiable(fn () => User::factory()->make(['id' => 2])),
 ]);
 ```
 
-### Variations on the notification itself
+### Variants on the notification itself
 
 If you would rather keep the preview data next to the notification, add a static
-`previewVariations()` method. No interface to implement, no import needed:
+`previewVariants()` method. No interface to implement, no import needed:
 
 ```php
 class OrderShipped extends Notification
 {
-    public static function previewVariations(): array
+    public static function previewVariants(): array
     {
         return [
             'Express' => fn () => new self(Order::factory()->express()->make()),
@@ -161,7 +161,7 @@ class OrderShipped extends Notification
 }
 ```
 
-Variations registered through the facade take precedence over these.
+Variants registered through the facade take precedence over these.
 
 ### Labels and groups
 

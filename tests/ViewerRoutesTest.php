@@ -22,10 +22,10 @@ it('renders a notification preview as html', function () {
         ->assertSee('Nested notification.');
 });
 
-it('renders the selected variation', function () {
+it('renders the selected variant', function () {
     $this->get('/dev/notifications/preview?'.http_build_query([
         'class' => SelfDescribingNotification::class,
-        'variation' => 'Formal',
+        'variant' => 'Formal',
     ]))->assertOk()->assertSee('Tone is formal.');
 });
 
@@ -70,7 +70,7 @@ it('carries ui overrides into the sent mail', function () {
     $this->post('/dev/notifications/send', [
         'email' => 'someone@example.com',
         'class' => SelfDescribingNotification::class,
-        'variation' => 'Formal',
+        'variant' => 'Formal',
     ])->assertRedirect();
 
     $sent = Mail::mailer()->getSymfonyTransport()->messages()[0]->getOriginalMessage();

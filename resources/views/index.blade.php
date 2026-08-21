@@ -29,7 +29,7 @@
 
                 <div class="nv-spacer"></div>
 
-                <select class="nv-select" id="nv-variation" hidden aria-label="Variation"></select>
+                <select class="nv-select" id="nv-variant" hidden aria-label="Variant"></select>
 
                 @if (count($locales) > 1)
                     <select class="nv-select" id="nv-locale" aria-label="Locale">
@@ -108,7 +108,7 @@
             <h2>Send test mail</h2>
             <input type="email" name="email" required placeholder="you@example.com" value="{{ $testEmail }}">
             <input type="hidden" name="class" id="nv-send-class">
-            <input type="hidden" name="variation" id="nv-send-variation">
+            <input type="hidden" name="variant" id="nv-send-variant">
             <input type="hidden" name="locale" id="nv-send-locale">
             <div id="nv-send-values"></div>
             <div class="nv-dialog-actions">
@@ -137,7 +137,7 @@
 
             const state = {
                 selected: ENTRIES[0] || null,
-                variation: null,
+                variant: null,
                 pane: 'preview',
                 format: 'html',
                 viewport: 'desktop',
@@ -149,7 +149,7 @@
             const el = (id) => document.getElementById(id);
             const frame = el('nv-frame');
             const localeSelect = el('nv-locale');
-            const variationSelect = el('nv-variation');
+            const variantSelect = el('nv-variant');
 
             const locale = () => (localeSelect ? localeSelect.value : '');
 
@@ -158,7 +158,7 @@
 
                 const url = new URL(PREVIEW_URL, window.location.origin);
                 url.searchParams.set('class', state.selected.class);
-                if (state.variation) url.searchParams.set('variation', state.variation);
+                if (state.variant) url.searchParams.set('variant', state.variant);
                 if (state.format === 'text') url.searchParams.set('format', 'text');
                 if (locale()) url.searchParams.set('locale', locale());
                 Object.entries(state.values).forEach(([name, value]) => {
@@ -246,16 +246,16 @@
                 });
             }
 
-            function renderVariations() {
-                const variations = state.selected?.variations || [];
-                variationSelect.hidden = variations.length < 2;
-                variationSelect.innerHTML = '';
-                variations.forEach((name) => {
+            function renderVariants() {
+                const variants = state.selected?.variants || [];
+                variantSelect.hidden = variants.length < 2;
+                variantSelect.innerHTML = '';
+                variants.forEach((name) => {
                     const option = document.createElement('option');
                     option.value = name;
                     option.textContent = name;
-                    option.selected = name === state.variation;
-                    variationSelect.appendChild(option);
+                    option.selected = name === state.variant;
+                    variantSelect.appendChild(option);
                 });
             }
 
@@ -343,7 +343,7 @@
                     row('Template', item.view),
                     row('Channels', (item.channels || []).join(', ')),
                     row('Queued', item.queued ? 'yes' : 'no'),
-                    row('Variations', (item.variations || []).join(', ')),
+                    row('Variants', (item.variants || []).join(', ')),
                 );
 
                 const metaHeading = document.createElement('h2');
@@ -456,10 +456,10 @@
 
             function select(item) {
                 state.selected = item;
-                state.variation = item.variations[0] || null;
+                state.variant = item.variants[0] || null;
                 state.values = {};
                 renderList();
-                renderVariations();
+                renderVariants();
                 renderEnvelope();
                 renderDetails();
                 refreshPreview();
@@ -485,8 +485,8 @@
 
             document.querySelector('[data-kind="all"]').setAttribute('aria-pressed', 'true');
 
-            variationSelect.addEventListener('change', () => {
-                state.variation = variationSelect.value;
+            variantSelect.addEventListener('change', () => {
+                state.variant = variantSelect.value;
                 refreshPreview();
             });
 
@@ -577,7 +577,7 @@
                 if (!state.selected) return;
 
                 el('nv-send-class').value = state.selected.class;
-                el('nv-send-variation').value = state.variation || '';
+                el('nv-send-variant').value = state.variant || '';
                 el('nv-send-locale').value = locale();
 
                 const values = el('nv-send-values');

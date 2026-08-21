@@ -8,7 +8,7 @@
     <p style="margin:0 0 4px;font-weight:700;font-size:15px;">{{ class_basename($exception) }}</p>
     <p style="margin:0 0 20px;font-size:14px;">{{ $exception->getMessage() }}</p>
     <p style="margin:0 0 20px;color:#7f1d1d;">{{ $exception->getFile() }}:{{ $exception->getLine() }}</p>
-    <p style="margin:0 0 8px;color:#7f1d1d;">Register a variation or a resolver for this notification to give it usable preview data.</p>
+    <p style="margin:0 0 8px;color:#7f1d1d;">Register a variant or a resolver for this notification to give it usable preview data.</p>
     <pre style="margin:0;padding:16px;overflow:auto;background:#fff;border:1px solid #fecaca;border-radius:8px;color:#7f1d1d;">{{ $exception->getTraceAsString() }}</pre>
 </body>
 </html>

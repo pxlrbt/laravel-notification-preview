@@ -15,7 +15,7 @@ class SelfDescribingNotification extends Notification
     /**
      * @return array<string, Closure>
      */
-    public static function previewVariations(): array
+    public static function previewVariants(): array
     {
         return [
             'Friendly' => fn () => new self('friendly'),

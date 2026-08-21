@@ -8,7 +8,7 @@ use Closure;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 
-class Variation
+class Variant
 {
     protected ?Closure $notifiableFactory = null;
 
@@ -23,7 +23,7 @@ class Variation
     }
 
     /**
-     * Overrides the notifiable used to render this variation.
+     * Overrides the notifiable used to render this variant.
      */
     public function notifiable(Closure $factory): self
     {
