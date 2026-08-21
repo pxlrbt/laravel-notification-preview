@@ -30,7 +30,7 @@ abstract class TestCase extends BaseTestCase
 
         $app['config']->set('notification-viewer.url_prefix', 'dev/notifications');
         $app['config']->set('notification-viewer.paths', [
-            __DIR__.'/Fixtures/Notifications' => 'pxlrbt\\LaravelNotificationViewer\\Tests\\Fixtures\\Notifications',
+            __DIR__.'/Fixtures/Notifications',
         ]);
     }
 

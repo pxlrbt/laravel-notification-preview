@@ -285,11 +285,11 @@ class NotificationViewer
     }
 
     /**
-     * @return array<string, string>
+     * @return list<string>
      */
     protected function paths(): array
     {
-        /** @var array<string, string> $paths */
+        /** @var list<string> $paths */
         $paths = config('notification-viewer.paths', []);
 
         return $paths;

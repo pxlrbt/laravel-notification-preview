@@ -33,10 +33,10 @@ return [
     'url_prefix' => env('NOTIFICATION_VIEWER_URL_PREFIX', 'dev/notifications'),
     'middleware' => ['web'],
 
-    // Directory => the PSR-4 root namespace of that directory. Scanned recursively.
+    // Directories, scanned recursively.
     'paths' => [
-        app_path('Notifications') => 'App\\Notifications',
-        app_path('Mail') => 'App\\Mail',
+        app_path('Notifications'),
+        app_path('Mail'),
     ],
 
     // Class names and namespaces to hide.
@@ -48,6 +48,9 @@ return [
     'test_email' => env('NOTIFICATION_VIEWER_TEST_EMAIL'),
 ];
 ```
+
+The namespace of each directory is read from Composer's PSR-4 map, so it never
+has to be repeated here. Directories that map to nothing are skipped.
 
 Only concrete subclasses of `Illuminate\Notifications\Notification` and
 `Illuminate\Mail\Mailable` are listed; abstract classes and everything else are

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace pxlrbt\LaravelNotificationViewer;
 
+use Composer\Autoload\ClassLoader;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -14,7 +15,7 @@ use Throwable;
 class Discovery
 {
     /**
-     * @param  array<string, string>  $paths  Absolute directory path => root namespace of that directory.
+     * @param  list<string>  $paths  Absolute directory paths, scanned recursively.
      * @param  list<class-string>  $types  Base classes a discovered class must extend.
      * @return Collection<int, class-string>
      */
@@ -25,7 +26,7 @@ class Discovery
         }
 
         return Collection::make($paths)
-            ->flatMap(fn (string $namespace, string $path) => $this->scan($path, $namespace, $types))
+            ->flatMap(fn (string $path) => $this->scan($path, $types))
             ->unique()
             ->values();
     }
@@ -34,9 +35,11 @@ class Discovery
      * @param  list<class-string>  $types
      * @return Collection<int, class-string>
      */
-    protected function scan(string $path, string $namespace, array $types): Collection
+    protected function scan(string $path, array $types): Collection
     {
-        if (! File::isDirectory($path)) {
+        $namespace = $this->namespaceFor($path);
+
+        if ($namespace === null || ! File::isDirectory($path)) {
             return Collection::make();
         }
 
@@ -48,10 +51,51 @@ class Discovery
             ->values();
     }
 
+    /**
+     * Derives the namespace of a directory from Composer's PSR-4 map, so the
+     * same mapping never has to be repeated in the config.
+     */
+    protected function namespaceFor(string $path): ?string
+    {
+        $path = $this->normalize($path);
+        $namespace = null;
+        $matched = '';
+
+        foreach (ClassLoader::getRegisteredLoaders() as $loader) {
+            foreach ($loader->getPrefixesPsr4() as $prefix => $roots) {
+                foreach ($roots as $root) {
+                    $root = $this->normalize($root);
+
+                    if ($path !== $root && ! Str::startsWith($path, $root.'/')) {
+                        continue;
+                    }
+
+                    // A nested root wins over the shallower one it sits inside.
+                    if (strlen($root) < strlen($matched)) {
+                        continue;
+                    }
+
+                    $matched = $root;
+                    $namespace = rtrim($prefix, '\\').str_replace('/', '\\', Str::after($path, $root));
+                }
+            }
+        }
+
+        return $namespace;
+    }
+
+    /**
+     * Composer's PSR-4 roots keep their `vendor/composer/../..` segments, so
+     * both sides have to be resolved before they can be compared.
+     */
+    protected function normalize(string $path): string
+    {
+        return rtrim(str_replace('\\', '/', realpath($path) ?: $path), '/');
+    }
+
     protected function classFromFile(SplFileInfo $file, string $path, string $namespace): ?string
     {
-        $base = rtrim(str_replace('\\', '/', $path), '/');
-        $relative = Str::after(str_replace('\\', '/', $file->getPathname()), $base.'/');
+        $relative = Str::after($this->normalize($file->getPathname()), $this->normalize($path).'/');
 
         $class = rtrim($namespace, '\\').'\\'.str_replace(['/', '.php'], ['\\', ''], $relative);
 

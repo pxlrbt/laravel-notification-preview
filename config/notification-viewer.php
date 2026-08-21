@@ -21,12 +21,12 @@ return [
     'middleware' => ['web'],
 
     /*
-     * Directories scanned recursively, keyed by path with the PSR-4 root
-     * namespace of that path as value.
+     * Directories scanned recursively. The namespace of each directory is read
+     * from Composer's PSR-4 map, so directories outside it are skipped.
      */
     'paths' => [
-        app_path('Notifications') => 'App\\Notifications',
-        app_path('Mail') => 'App\\Mail',
+        app_path('Notifications'),
+        app_path('Mail'),
     ],
 
     /*

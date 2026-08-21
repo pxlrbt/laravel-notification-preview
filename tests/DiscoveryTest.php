@@ -95,3 +95,11 @@ it('does not treat a partial namespace match as an exclusion', function () {
 
     expect(NotificationViewer::classes()->all())->toContain(InvoiceReady::class);
 });
+
+it('skips a directory that composer does not autoload', function () {
+    // Arrange
+    config()->set('notification-viewer.paths', [dirname(__DIR__).'/config']);
+
+    // Act & Assert
+    expect(NotificationViewer::classes()->all())->toBe([]);
+});
