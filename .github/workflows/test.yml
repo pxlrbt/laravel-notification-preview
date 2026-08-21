@@ -12,6 +12,13 @@ on:
       - '**.php'
       - '.github/**.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read # nothing here writes to the repository
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -28,10 +35,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.0.0
+        with:
+          persist-credentials: false
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.36.0
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, intl, fileinfo
@@ -39,13 +48,18 @@ jobs:
 
       - name: Setup problem matchers
         run: |
-          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
-          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+          echo "::add-matcher::${TOOL_CACHE}/php.json"
+          echo "::add-matcher::${TOOL_CACHE}/phpunit.json"
+        env:
+          TOOL_CACHE: ${{ runner.tool_cache }}
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer require "laravel/framework:${LARAVEL}" "orchestra/testbench:${TESTBENCH}" --no-interaction --no-update
           composer update --prefer-stable --prefer-dist --no-interaction
+        env:
+          LARAVEL: ${{ matrix.laravel }}
+          TESTBENCH: ${{ matrix.testbench }}
 
       - name: List Installed Dependencies
         run: composer show -D
