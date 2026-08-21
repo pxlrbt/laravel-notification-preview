@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models\Factories;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models\Customer;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models\Customer;
 
 /**
  * @extends Factory<Customer>

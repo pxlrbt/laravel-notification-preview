@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Arr;
-use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
-use pxlrbt\LaravelNotificationViewer\NotificationInspector;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\BrokenNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested\DeepNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\ScalarNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\SelfDescribingNotification;
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
+use pxlrbt\LaravelNotificationPreview\NotificationInspector;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\BrokenNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Nested\DeepNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ScalarNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\SelfDescribingNotification;
 
 beforeEach(fn () => $this->inspector = app(NotificationInspector::class));
 
@@ -31,8 +31,8 @@ it('captures render failures instead of throwing', function () {
 });
 
 it('uses registered labels and groups', function () {
-    NotificationViewer::label(DeepNotification::class, 'Custom label');
-    NotificationViewer::group(DeepNotification::class, 'Custom group');
+    NotificationPreview::label(DeepNotification::class, 'Custom label');
+    NotificationPreview::group(DeepNotification::class, 'Custom group');
 
     expect($this->inspector->describe(DeepNotification::class))
         ->label->toBe('Custom label')
@@ -67,7 +67,7 @@ it('offers enum cases as select options', function () {
 });
 
 it('sorts grouped notifications ahead of ungrouped ones', function () {
-    NotificationViewer::group(ScalarNotification::class, 'Billing');
+    NotificationPreview::group(ScalarNotification::class, 'Billing');
 
     $groups = array_column($this->inspector->all(), 'group');
 

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\BrokenNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested\DeepNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\NotANotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\ScalarNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\SelfDescribingNotification;
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\BrokenNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Nested\DeepNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\NotANotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ScalarNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\SelfDescribingNotification;
 
 it('lists every discovered notification on the index', function () {
     $this->get('/dev/notifications')
         ->assertOk()
-        ->assertSee('Notification Viewer')
+        ->assertSee('Notification Preview')
         ->assertSee('Deep Notification');
 });
 
@@ -49,7 +49,7 @@ it('sends a test mail carrying the rendered preview', function () {
     $this->post('/dev/notifications/send', [
         'email' => 'someone@example.com',
         'class' => DeepNotification::class,
-    ])->assertRedirect()->assertSessionHas('notification-viewer.status');
+    ])->assertRedirect()->assertSessionHas('notification-preview.status');
 
     $messages = Mail::mailer()->getSymfonyTransport()->messages();
 
@@ -104,7 +104,7 @@ it('lets everybody in outside production by default', function () {
 
 it('denies anybody the auth closure turns down', function () {
     // Arrange
-    NotificationViewer::auth(fn () => false);
+    NotificationPreview::auth(fn () => false);
 
     // Act & Assert
     $this->get('/dev/notifications')->assertForbidden();
@@ -114,7 +114,7 @@ it('denies anybody the auth closure turns down', function () {
 it('passes the request to the auth closure', function () {
     // Arrange
     $seen = null;
-    NotificationViewer::auth(function (?Request $request) use (&$seen) {
+    NotificationPreview::auth(function (?Request $request) use (&$seen) {
         $seen = $request?->path();
 
         return true;

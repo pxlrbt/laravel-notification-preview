@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 

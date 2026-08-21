@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer;
+namespace pxlrbt\LaravelNotificationPreview;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
-class NotificationViewer
+class NotificationPreview
 {
     /** @var array<string, Closure> */
     protected array $resolvers = [];
@@ -41,7 +41,7 @@ class NotificationViewer
     protected ?Collection $cachedClasses = null;
 
     /**
-     * Decides who may open the viewer. Without one, everybody outside the
+     * Decides who may open the preview. Without one, everybody outside the
      * production environment can, where the routes are never registered.
      */
     public function auth(Closure $callback): static
@@ -240,7 +240,7 @@ class NotificationViewer
     }
 
     /**
-     * The base classes the viewer looks for, narrowed by the config toggles.
+     * The base classes the preview looks for, narrowed by the config toggles.
      *
      * @return list<class-string>
      */
@@ -248,11 +248,11 @@ class NotificationViewer
     {
         $types = [];
 
-        if (config('notification-viewer.notifications', true)) {
+        if (config('notification-preview.notifications', true)) {
             $types[] = Notification::class;
         }
 
-        if (config('notification-viewer.mailables', true)) {
+        if (config('notification-preview.mailables', true)) {
             $types[] = Mailable::class;
         }
 
@@ -297,7 +297,7 @@ class NotificationViewer
     protected function configuredExclusions(): array
     {
         /** @var list<string> $excluded */
-        $excluded = config('notification-viewer.exclude', []);
+        $excluded = config('notification-preview.exclude', []);
 
         return $excluded;
     }
@@ -313,7 +313,7 @@ class NotificationViewer
     protected function paths(): array
     {
         /** @var list<string> $paths */
-        $paths = config('notification-viewer.paths', []);
+        $paths = config('notification-preview.paths', []);
 
         return $paths;
     }
@@ -324,7 +324,7 @@ class NotificationViewer
     public function locales(): array
     {
         /** @var list<string>|null $configured */
-        $configured = config('notification-viewer.locales');
+        $configured = config('notification-preview.locales');
 
         if ($configured !== null) {
             return $configured;

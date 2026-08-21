@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Mail;
 
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;

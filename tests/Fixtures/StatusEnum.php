@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures;
 
 enum StatusEnum: string
 {

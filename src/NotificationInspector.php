@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer;
+namespace pxlrbt\LaravelNotificationPreview;
 
 use BackedEnum;
 use DateTimeInterface;
@@ -16,13 +16,13 @@ use UnitEnum;
 class NotificationInspector
 {
     public function __construct(
-        protected NotificationViewer $viewer,
+        protected NotificationPreview $registry,
         protected NotificationFactory $factory,
         protected PreviewRenderer $renderer,
     ) {}
 
     /**
-     * Metadata for every discovered class, used to render the viewer shell.
+     * Metadata for every discovered class, used to render the preview shell.
      *
      * ponytail: renders every entry once to read its subject line. Fine for a few
      * dozen classes; move to a lazy per-row request if the index gets slow.
@@ -32,7 +32,7 @@ class NotificationInspector
     public function all(): array
     {
         /** @var list<array<string, mixed>> */
-        return $this->viewer->classes()
+        return $this->registry->classes()
             ->map(fn (string $class) => $this->describe($class))
             // Grouped entries first, in group order, then the ungrouped rest.
             ->sortBy(fn (array $row) => ($row['group'] ?? "\u{FFFF}")."\u{0000}".$row['label'])
@@ -48,13 +48,13 @@ class NotificationInspector
     public function describe(string $class, ?string $variant = null, array $overrides = []): array
     {
         $reflection = new ReflectionClass($class);
-        $variants = array_keys($this->viewer->variantsFor($class));
+        $variants = array_keys($this->registry->variantsFor($class));
 
         $details = [
             'class' => $class,
             'kind' => $reflection->isSubclassOf(Mailable::class) ? 'mailable' : 'notification',
-            'label' => $this->viewer->labelFor($class) ?? $this->humanize(class_basename($class)),
-            'group' => $this->viewer->groupFor($class),
+            'label' => $this->registry->labelFor($class) ?? $this->humanize(class_basename($class)),
+            'group' => $this->registry->groupFor($class),
             'path' => $this->relativePath($reflection->getFileName() ?: ''),
             'variants' => $variants,
             'queued' => $reflection->implementsInterface(ShouldQueue::class),
@@ -118,12 +118,12 @@ class NotificationInspector
      */
     public function notifiableFor(string $class, ?string $variant = null): object
     {
-        $variants = $this->viewer->variantsFor($class);
+        $variants = $this->registry->variantsFor($class);
         $selected = $variant !== null
             ? ($variants[$variant] ?? null)
             : ($variants === [] ? null : reset($variants));
 
-        return $selected?->resolveNotifiable() ?? $this->viewer->resolveNotifiable();
+        return $selected?->resolveNotifiable() ?? $this->registry->resolveNotifiable();
     }
 
     /**

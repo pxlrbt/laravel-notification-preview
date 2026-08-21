@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use pxlrbt\LaravelNotificationViewer\NotificationInspector;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Channels\SmsChannel;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\MultiChannelNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\ScalarNotification;
+use pxlrbt\LaravelNotificationPreview\NotificationInspector;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Channels\SmsChannel;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\MultiChannelNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ScalarNotification;
 
 function formats(string $class): array
 {
@@ -30,7 +30,7 @@ it('offers only the mail bodies until the config opts a channel in', function ()
 
 it('offers a body per configured channel the notification declares', function () {
     // Arrange
-    config()->set('notification-viewer.channels', ['mail', 'database', 'sms']);
+    config()->set('notification-preview.channels', ['mail', 'database', 'sms']);
 
     // Act
     $formats = formats(MultiChannelNotification::class);
@@ -46,7 +46,7 @@ it('offers a body per configured channel the notification declares', function ()
 
 it('drops the mail bodies when mail is not configured', function () {
     // Arrange
-    config()->set('notification-viewer.channels', ['database']);
+    config()->set('notification-preview.channels', ['database']);
 
     // Act
     $values = array_column(formats(MultiChannelNotification::class), 'value');
@@ -57,7 +57,7 @@ it('drops the mail bodies when mail is not configured', function () {
 
 it('renders the database payload as json, falling back to toArray', function () {
     // Arrange
-    config()->set('notification-viewer.channels', ['mail', 'database']);
+    config()->set('notification-preview.channels', ['mail', 'database']);
 
     // Act
     $body = previewOf(MultiChannelNotification::class, 'database');
@@ -73,7 +73,7 @@ it('renders the database payload as json, falling back to toArray', function () 
 
 it('renders a channel class payload from its public properties', function () {
     // Arrange
-    config()->set('notification-viewer.channels', ['sms']);
+    config()->set('notification-preview.channels', ['sms']);
 
     // Act
     $body = previewOf(MultiChannelNotification::class, SmsChannel::class);
@@ -92,7 +92,7 @@ it('refuses a channel the config did not opt in', function () {
 
 it('refuses a channel the notification does not declare', function () {
     // Arrange
-    config()->set('notification-viewer.channels', ['mail', 'slack']);
+    config()->set('notification-preview.channels', ['mail', 'slack']);
 
     // Act & Assert
     expect(previewOf(ScalarNotification::class, 'slack'))

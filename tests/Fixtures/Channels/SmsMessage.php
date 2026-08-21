@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Channels;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Channels;
 
 class SmsMessage
 {

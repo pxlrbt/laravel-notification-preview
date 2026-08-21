@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Nested;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;

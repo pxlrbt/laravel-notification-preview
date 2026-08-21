@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models\Customer;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models\Ticket;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models\Customer;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models\Ticket;
 
 class ModelNotification extends Notification
 {

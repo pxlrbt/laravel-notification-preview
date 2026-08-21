@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer;
+namespace pxlrbt\LaravelNotificationPreview;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\View\Factory as ViewFactory;
@@ -110,7 +110,7 @@ class PreviewRenderer
     public function isEnabled(string $channel): bool
     {
         /** @var list<string> $enabled */
-        $enabled = config('notification-viewer.channels', ['mail']);
+        $enabled = config('notification-preview.channels', ['mail']);
 
         return in_array(
             Str::lower($this->channelName($channel)),

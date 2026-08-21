@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests;
+namespace pxlrbt\LaravelNotificationPreview\Tests;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use pxlrbt\LaravelNotificationViewer\NotificationViewerServiceProvider;
+use pxlrbt\LaravelNotificationPreview\NotificationPreviewServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -17,7 +17,7 @@ abstract class TestCase extends BaseTestCase
     protected function getPackageProviders($app): array
     {
         return [
-            NotificationViewerServiceProvider::class,
+            NotificationPreviewServiceProvider::class,
         ];
     }
 
@@ -28,8 +28,8 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('database.default', 'testing');
         $app['config']->set('view.paths', [__DIR__.'/Fixtures/views']);
 
-        $app['config']->set('notification-viewer.url_prefix', 'dev/notifications');
-        $app['config']->set('notification-viewer.paths', [
+        $app['config']->set('notification-preview.url_prefix', 'dev/notifications');
+        $app['config']->set('notification-preview.paths', [
             __DIR__.'/Fixtures/Notifications',
         ]);
     }

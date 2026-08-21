@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Http\Controllers;
+namespace pxlrbt\LaravelNotificationPreview\Http\Controllers;
 
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
@@ -12,16 +12,16 @@ use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
-use pxlrbt\LaravelNotificationViewer\NotificationFactory;
-use pxlrbt\LaravelNotificationViewer\NotificationInspector;
-use pxlrbt\LaravelNotificationViewer\NotificationViewer;
-use pxlrbt\LaravelNotificationViewer\PreviewRenderer;
+use pxlrbt\LaravelNotificationPreview\NotificationFactory;
+use pxlrbt\LaravelNotificationPreview\NotificationInspector;
+use pxlrbt\LaravelNotificationPreview\NotificationPreview;
+use pxlrbt\LaravelNotificationPreview\PreviewRenderer;
 use Throwable;
 
-class NotificationViewerController extends Controller
+class NotificationPreviewController extends Controller
 {
     public function __construct(
-        protected NotificationViewer $viewer,
+        protected NotificationPreview $registry,
         protected NotificationFactory $factory,
         protected NotificationInspector $inspector,
         protected PreviewRenderer $renderer,
@@ -30,12 +30,12 @@ class NotificationViewerController extends Controller
     public function index(): View
     {
         /** @var view-string $view */
-        $view = 'notification-viewer::index';
+        $view = 'notification-preview::index';
 
         return view($view, [
             'entries' => $this->inspector->all(),
-            'locales' => $this->viewer->locales(),
-            'testEmail' => config('notification-viewer.test_email'),
+            'locales' => $this->registry->locales(),
+            'testEmail' => config('notification-preview.test_email'),
         ]);
     }
 
@@ -53,7 +53,7 @@ class NotificationViewerController extends Controller
             $body = $this->build($request, $class)['html'];
         } catch (Throwable $exception) {
             /** @var view-string $view */
-            $view = 'notification-viewer::error';
+            $view = 'notification-preview::error';
 
             $body = view($view, ['exception' => $exception])->render();
         }
@@ -65,7 +65,7 @@ class NotificationViewerController extends Controller
     {
         $request->validate([
             'email' => ['required', 'email'],
-            'class' => ['required', 'string', Rule::in($this->viewer->classes()->all())],
+            'class' => ['required', 'string', Rule::in($this->registry->classes()->all())],
         ]);
 
         /** @var class-string $class */
@@ -83,7 +83,7 @@ class NotificationViewerController extends Controller
             $message->to($recipient)->subject($subject);
         });
 
-        return back()->with('notification-viewer.status', "Test mail sent to {$recipient}.");
+        return back()->with('notification-preview.status', "Test mail sent to {$recipient}.");
     }
 
     /**
@@ -146,7 +146,7 @@ class NotificationViewerController extends Controller
     {
         $class = $request->string('class')->toString();
 
-        abort_unless($class !== '' && $this->viewer->contains($class), 404);
+        abort_unless($class !== '' && $this->registry->contains($class), 404);
 
         /** @var class-string $class */
         return $class;

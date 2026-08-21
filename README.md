@@ -1,8 +1,8 @@
-# Laravel Notification Viewer
+# Laravel Notification Preview
 
 Browse, preview and test-send every notification and mailable in your Laravel app.
 
-The viewer scans the configured directories, builds each class by resolving its
+The preview scans the configured directories, builds each class by resolving its
 constructor arguments from their types, and renders the mail it produces. Classes
 whose arguments reflection cannot guess get their data from resolvers or
 variants you register.
@@ -12,25 +12,25 @@ variants you register.
 ## Installation
 
 ```bash
-composer require pxlrbt/laravel-notification-viewer --dev
-php artisan vendor:publish --tag=notification-viewer-config
+composer require pxlrbt/laravel-notification-preview --dev
+php artisan vendor:publish --tag=notification-preview-config
 ```
 
-The viewer registers its routes automatically and is **always disabled in the
+The preview registers its routes automatically and is **always disabled in the
 production environment**.
 
 ## Configuration
 
 ```php
-// config/notification-viewer.php
+// config/notification-preview.php
 return [
-    'enabled' => env('NOTIFICATION_VIEWER_ENABLED', true),
+    'enabled' => env('NOTIFICATION_PREVIEW_ENABLED', true),
 
     // The kinds of classes to look for. Turn either off to skip it entirely.
-    'notifications' => env('NOTIFICATION_VIEWER_NOTIFICATIONS', true),
-    'mailables' => env('NOTIFICATION_VIEWER_MAILABLES', true),
+    'notifications' => env('NOTIFICATION_PREVIEW_NOTIFICATIONS', true),
+    'mailables' => env('NOTIFICATION_PREVIEW_MAILABLES', true),
 
-    'url_prefix' => env('NOTIFICATION_VIEWER_URL_PREFIX', 'dev/notifications'),
+    'url_prefix' => env('NOTIFICATION_PREVIEW_URL_PREFIX', 'dev/notifications'),
     'middleware' => ['web'],
 
     // Directories, scanned recursively.
@@ -45,7 +45,7 @@ return [
     // null falls back to the directories inside lang_path()
     'locales' => null,
 
-    'test_email' => env('NOTIFICATION_VIEWER_TEST_EMAIL'),
+    'test_email' => env('NOTIFICATION_PREVIEW_TEST_EMAIL'),
 ];
 ```
 
@@ -84,17 +84,17 @@ Laravel's own channel does.
 
 ### Who may open it
 
-The viewer's routes are never registered in the production environment. Everywhere
+The preview's routes are never registered in the production environment. Everywhere
 else everybody may open it, until you say otherwise:
 
 ```php
-use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
 
 // Local machines only.
-NotificationViewer::auth(fn () => app()->isLocal());
+NotificationPreview::auth(fn () => app()->isLocal());
 
 // Or specific people, wherever they are.
-NotificationViewer::auth(fn (?Request $request) => $request?->user()?->isAdmin());
+NotificationPreview::auth(fn (?Request $request) => $request?->user()?->isAdmin());
 ```
 
 Anyone the closure turns down gets a 403.
@@ -113,7 +113,7 @@ everything below it:
 
 ## Argument resolution
 
-For each constructor parameter the viewer tries, in order:
+For each constructor parameter the preview tries, in order:
 
 1. A value edited in the UI (scalars, enums and dates only).
 2. A registered resolver for the parameter reference, then for its type.
@@ -131,16 +131,16 @@ For each constructor parameter the viewer tries, in order:
 Register these in a service provider, keyed by type:
 
 ```php
-use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
 
-NotificationViewer::resolve(Order::class, fn () => Order::factory()->make(['id' => 1]));
+NotificationPreview::resolve(Order::class, fn () => Order::factory()->make(['id' => 1]));
 ```
 
 Untyped parameters cannot be matched by type, so key them by parameter instead.
 A key registered against a parent class covers every subclass:
 
 ```php
-NotificationViewer::resolve(
+NotificationPreview::resolve(
     StateNotification::class.'::$model',
     fn () => Order::factory()->make(),
 );
@@ -149,7 +149,7 @@ NotificationViewer::resolve(
 The notifiable that notifications are rendered against works the same way:
 
 ```php
-NotificationViewer::notifiable(fn () => User::factory()->make(['id' => 1]));
+NotificationPreview::notifiable(fn () => User::factory()->make(['id' => 1]));
 ```
 
 ### Variants
@@ -159,7 +159,7 @@ state, a particular payload — register named variants. A variant returns the
 finished notification and skips argument resolution entirely:
 
 ```php
-NotificationViewer::variants(OrderCancelled::class, [
+NotificationPreview::variants(OrderCancelled::class, [
     'By customer' => fn () => (new OrderCancelled($order))->setReason('customer'),
     'By us' => fn () => (new OrderCancelled($order))->setReason('internal'),
 ]);
@@ -168,9 +168,9 @@ NotificationViewer::variants(OrderCancelled::class, [
 Variants can pin their own notifiable:
 
 ```php
-use pxlrbt\LaravelNotificationViewer\Variant;
+use pxlrbt\LaravelNotificationPreview\Variant;
 
-NotificationViewer::variants(OrderShipped::class, [
+NotificationPreview::variants(OrderShipped::class, [
     'To the buyer' => Variant::make('To the buyer', fn () => new OrderShipped($order))
         ->notifiable(fn () => User::factory()->make(['id' => 2])),
 ]);
@@ -199,18 +199,18 @@ Variants registered through the facade take precedence over these.
 ### Labels and groups
 
 ```php
-NotificationViewer::label(OrderShipped::class, 'Shipping confirmation');
-NotificationViewer::group(OrderShipped::class, 'Orders');
+NotificationPreview::label(OrderShipped::class, 'Shipping confirmation');
+NotificationPreview::group(OrderShipped::class, 'Orders');
 ```
 
 ### Registering and excluding classes
 
 ```php
-NotificationViewer::register(SomePackage\Notifications\Welcome::class);
+NotificationPreview::register(SomePackage\Notifications\Welcome::class);
 
 // Same matching rules as the `exclude` config key.
-NotificationViewer::exclude(InternalDebugNotification::class);
-NotificationViewer::exclude('App\Notifications\Internal');
+NotificationPreview::exclude(InternalDebugNotification::class);
+NotificationPreview::exclude('App\Notifications\Internal');
 ```
 
 ## Testing

@@ -1,45 +1,45 @@
-@extends('notification-viewer::layout')
+@extends('notification-preview::layout')
 
 @section('content')
-    <div class="nv-shell">
-        <aside class="nv-sidebar">
-            <div class="nv-sidebar-header">
-                <div class="nv-search">
+    <div class="np-shell">
+        <aside class="np-sidebar">
+            <div class="np-sidebar-header">
+                <div class="np-search">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
                     </svg>
-                    <input id="nv-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false">
+                    <input id="np-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false">
                 </div>
 
-                <div class="nv-segmented nv-kind-filter" id="nv-kind-filter" role="group" aria-label="Type" hidden>
+                <div class="np-segmented np-kind-filter" id="np-kind-filter" role="group" aria-label="Type" hidden>
                     <button type="button" data-kind="all">All</button>
                     <button type="button" data-kind="notification">Notifications</button>
                     <button type="button" data-kind="mailable">Mailables</button>
                 </div>
             </div>
-            <nav class="nv-list" id="nv-list"></nav>
+            <nav class="np-list" id="np-list"></nav>
         </aside>
 
-        <main class="nv-main">
-            <div class="nv-toolbar">
-                <div class="nv-segmented" role="group" aria-label="Pane">
+        <main class="np-main">
+            <div class="np-toolbar">
+                <div class="np-segmented" role="group" aria-label="Pane">
                     <button type="button" data-pane="preview">Preview</button>
                     <button type="button" data-pane="details">Details</button>
                 </div>
 
-                <div class="nv-spacer"></div>
+                <div class="np-spacer"></div>
 
-                <select class="nv-select" id="nv-variant" hidden aria-label="Variant"></select>
+                <select class="np-select" id="np-variant" hidden aria-label="Variant"></select>
 
                 @if (count($locales) > 1)
-                    <select class="nv-select" id="nv-locale" aria-label="Locale">
+                    <select class="np-select" id="np-locale" aria-label="Locale">
                         @foreach ($locales as $locale)
                             <option value="{{ $locale }}">{{ strtoupper($locale) }}</option>
                         @endforeach
                     </select>
                 @endif
 
-                <div class="nv-segmented nv-segmented-icons" role="group" aria-label="Viewport">
+                <div class="np-segmented np-segmented-icons" role="group" aria-label="Viewport">
                     <button type="button" data-viewport="desktop" data-tooltip="Desktop" aria-label="Desktop">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>
@@ -57,7 +57,7 @@
                     </button>
                 </div>
 
-                <button type="button" class="nv-button nv-button-primary" id="nv-send">
+                <button type="button" class="np-button np-button-primary" id="np-send">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 3 3 10.5l7 3 3 7L21 3Z"/>
                     </svg>
@@ -65,52 +65,52 @@
                 </button>
             </div>
 
-            <div class="nv-envelope" id="nv-envelope">
-                <div class="nv-avatar" id="nv-initials"></div>
+            <div class="np-envelope" id="np-envelope">
+                <div class="np-avatar" id="np-initials"></div>
                 <div>
-                    <div class="nv-envelope-title" id="nv-label"></div>
-                    <div class="nv-envelope-line" id="nv-subject"></div>
-                    <div class="nv-envelope-line" id="nv-from"></div>
+                    <div class="np-envelope-title" id="np-label"></div>
+                    <div class="np-envelope-line" id="np-subject"></div>
+                    <div class="np-envelope-line" id="np-from"></div>
                 </div>
             </div>
 
-            <div class="nv-pane" id="nv-pane-preview">
-                <div class="nv-segmented nv-format-floating" id="nv-format" role="group" aria-label="Body"></div>
+            <div class="np-pane" id="np-pane-preview">
+                <div class="np-segmented np-format-floating" id="np-format" role="group" aria-label="Body"></div>
 
-                <button type="button" class="nv-button nv-copy-floating" id="nv-copy" data-tooltip="Copy the rendered body">
+                <button type="button" class="np-button np-copy-floating" id="np-copy" data-tooltip="Copy the rendered body">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
                     </svg>
                     <span>Copy HTML</span>
                 </button>
-                <div class="nv-frame-wrap" id="nv-frame-wrap">
-                    <iframe id="nv-frame" sandbox="allow-same-origin" title="Notification preview"></iframe>
+                <div class="np-frame-wrap" id="np-frame-wrap">
+                    <iframe id="np-frame" sandbox="allow-same-origin" title="Notification preview"></iframe>
                 </div>
             </div>
 
-            <div class="nv-pane nv-details" id="nv-pane-details" hidden>
-                @if (session('notification-viewer.status'))
-                    <div class="nv-status">{{ session('notification-viewer.status') }}</div>
+            <div class="np-pane np-details" id="np-pane-details" hidden>
+                @if (session('notification-preview.status'))
+                    <div class="np-status">{{ session('notification-preview.status') }}</div>
                 @endif
-                <div id="nv-details-body"></div>
+                <div id="np-details-body"></div>
             </div>
         </main>
     </div>
 
-    <div id="nv-tooltip" class="nv-tooltip" popover="manual" role="tooltip"></div>
+    <div id="np-tooltip" class="np-tooltip" popover="manual" role="tooltip"></div>
 
-    <dialog id="nv-send-dialog">
-        <form method="POST" action="{{ route('notification-viewer.send') }}" id="nv-send-form">
+    <dialog id="np-send-dialog">
+        <form method="POST" action="{{ route('notification-preview.send') }}" id="np-send-form">
             @csrf
             <h2>Send test mail</h2>
             <input type="email" name="email" required placeholder="you@example.com" value="{{ $testEmail }}">
-            <input type="hidden" name="class" id="nv-send-class">
-            <input type="hidden" name="variant" id="nv-send-variant">
-            <input type="hidden" name="locale" id="nv-send-locale">
-            <div id="nv-send-values"></div>
-            <div class="nv-dialog-actions">
-                <button type="button" class="nv-button" id="nv-send-cancel">Cancel</button>
-                <button type="submit" class="nv-button nv-button-primary">Send</button>
+            <input type="hidden" name="class" id="np-send-class">
+            <input type="hidden" name="variant" id="np-send-variant">
+            <input type="hidden" name="locale" id="np-send-locale">
+            <div id="np-send-values"></div>
+            <div class="np-dialog-actions">
+                <button type="button" class="np-button" id="np-send-cancel">Cancel</button>
+                <button type="submit" class="np-button np-button-primary">Send</button>
             </div>
         </form>
     </dialog>
@@ -118,7 +118,7 @@
     <script>
         (function () {
             const ENTRIES = @json($entries);
-            const PREVIEW_URL = @json(route('notification-viewer.preview'));
+            const PREVIEW_URL = @json(route('notification-preview.preview'));
             const VIEWPORTS = { desktop: '100%', tablet: '640px', mobile: '390px' };
 
             const KINDS = {
@@ -146,9 +146,9 @@
             };
 
             const el = (id) => document.getElementById(id);
-            const frame = el('nv-frame');
-            const localeSelect = el('nv-locale');
-            const variantSelect = el('nv-variant');
+            const frame = el('np-frame');
+            const localeSelect = el('np-locale');
+            const variantSelect = el('np-variant');
 
             const locale = () => (localeSelect ? localeSelect.value : '');
 
@@ -184,11 +184,11 @@
                 const visible = ENTRIES
                     .filter((item) => state.kind === 'all' || item.kind === state.kind)
                     .filter((item) => !term || matches(item, term));
-                const list = el('nv-list');
+                const list = el('np-list');
                 list.innerHTML = '';
 
                 if (!visible.length) {
-                    list.innerHTML = '<p class="nv-empty">Nothing found.</p>';
+                    list.innerHTML = '<p class="np-empty">Nothing found.</p>';
                     return;
                 }
 
@@ -201,18 +201,18 @@
                     if (grouped && (index === 0 || group !== currentGroup)) {
                         currentGroup = group;
                         const heading = document.createElement('p');
-                        heading.className = 'nv-group-label';
+                        heading.className = 'np-group-label';
                         heading.textContent = group;
                         list.appendChild(heading);
                     }
 
                     const button = document.createElement('button');
                     button.type = 'button';
-                    button.className = 'nv-item';
+                    button.className = 'np-item';
                     button.setAttribute('aria-current', String(state.selected?.class === item.class));
 
                     const title = document.createElement('div');
-                    title.className = 'nv-item-title';
+                    title.className = 'np-item-title';
 
                     const label = document.createElement('span');
                     label.textContent = item.label;
@@ -222,7 +222,7 @@
 
                     if (kind) {
                         const badge = document.createElement('span');
-                        badge.className = 'nv-kind';
+                        badge.className = 'np-kind';
                         badge.dataset.tooltip = kind.label;
                         badge.setAttribute('aria-label', kind.label);
                         badge.innerHTML = kind.icon;
@@ -230,12 +230,12 @@
                     }
 
                     const subject = document.createElement('div');
-                    subject.className = 'nv-item-subject';
+                    subject.className = 'np-item-subject';
                     subject.textContent = item.error ? 'Failed to render' : (item.subject || '—');
                     subject.dataset.error = String(Boolean(item.error));
 
                     const path = document.createElement('div');
-                    path.className = 'nv-item-path';
+                    path.className = 'np-item-path';
                     path.textContent = item.path;
                     path.dataset.tooltip = item.path;
 
@@ -260,10 +260,10 @@
 
             function renderEnvelope() {
                 const item = state.selected;
-                el('nv-initials').textContent = item ? initials(item.label) : '';
-                el('nv-label').textContent = item ? item.label : '';
-                el('nv-subject').textContent = item ? (item.subject || '—') : '';
-                el('nv-from').textContent = item && item.from ? `From: ${item.from}` : '';
+                el('np-initials').textContent = item ? initials(item.label) : '';
+                el('np-label').textContent = item ? item.label : '';
+                el('np-subject').textContent = item ? (item.subject || '—') : '';
+                el('np-from').textContent = item && item.from ? `From: ${item.from}` : '';
             }
 
             function row(label, value) {
@@ -315,14 +315,14 @@
             }
 
             function renderDetails() {
-                const body = el('nv-details-body');
+                const body = el('np-details-body');
                 body.innerHTML = '';
                 const item = state.selected;
                 if (!item) return;
 
                 if (item.error) {
                     const banner = document.createElement('div');
-                    banner.className = 'nv-error-banner';
+                    banner.className = 'np-error-banner';
                     banner.textContent = item.error;
                     body.appendChild(banner);
                 }
@@ -332,7 +332,7 @@
                 }
 
                 const meta = document.createElement('table');
-                meta.className = 'nv-table';
+                meta.className = 'np-table';
                 meta.append(
                     row('Class', item.class),
                     row('Kind', KINDS[item.kind]?.label ?? item.kind),
@@ -359,13 +359,13 @@
 
             function paramsTable(item) {
                 const params = document.createElement('table');
-                params.className = 'nv-table';
+                params.className = 'np-table';
 
                 item.params.forEach((param) => {
                     const label = document.createElement('span');
                     label.textContent = `${param.name} `;
                     const badge = document.createElement('span');
-                    badge.className = 'nv-badge';
+                    badge.className = 'np-badge';
                     badge.textContent = param.type;
                     label.appendChild(badge);
 
@@ -377,7 +377,7 @@
                     if (param.editable) {
                         td.appendChild(paramInput(param));
                     } else {
-                        td.className = 'nv-readonly';
+                        td.className = 'np-readonly';
                         td.textContent = param.preview ?? '—';
                     }
 
@@ -398,7 +398,7 @@
              * message. Copy that colour onto the frame and the pane instead.
              */
             function matchPreviewBackground() {
-                const pane = el('nv-pane-preview');
+                const pane = el('np-pane-preview');
                 let color = '';
 
                 try {
@@ -428,15 +428,15 @@
                     color = '';
                 }
 
-                frame.style.background = color || 'var(--nv-surface)';
-                pane.style.background = color || 'var(--nv-muted)';
+                frame.style.background = color || 'var(--np-surface)';
+                pane.style.background = color || 'var(--np-muted)';
             }
 
             frame.addEventListener('load', matchPreviewBackground);
 
             function renderFormats() {
                 const formats = state.selected ? state.selected.formats : [];
-                const control = el('nv-format');
+                const control = el('np-format');
 
                 // A lone body has nothing to switch between.
                 control.hidden = formats.length < 2;
@@ -450,15 +450,15 @@
                 document.querySelectorAll('[data-pane]').forEach((button) => {
                     button.setAttribute('aria-pressed', String(button.dataset.pane === state.pane));
                 });
-                el('nv-pane-preview').hidden = state.pane !== 'preview';
-                el('nv-pane-details').hidden = state.pane !== 'details';
+                el('np-pane-preview').hidden = state.pane !== 'preview';
+                el('np-pane-details').hidden = state.pane !== 'details';
 
-                el('nv-copy').querySelector('span').textContent = COPY_LABELS[state.format] || 'Copy JSON';
+                el('np-copy').querySelector('span').textContent = COPY_LABELS[state.format] || 'Copy JSON';
 
                 document.querySelectorAll('[data-viewport]').forEach((button) => {
                     button.setAttribute('aria-pressed', String(button.dataset.viewport === state.viewport));
                 });
-                el('nv-frame-wrap').style.maxWidth = VIEWPORTS[state.viewport];
+                el('np-frame-wrap').style.maxWidth = VIEWPORTS[state.viewport];
             }
 
             function select(item) {
@@ -475,13 +475,13 @@
                 refreshPreview();
             }
 
-            el('nv-search').addEventListener('input', (event) => {
+            el('np-search').addEventListener('input', (event) => {
                 state.search = event.target.value;
                 renderList();
             });
 
             // The filter only earns its space when both kinds are actually present.
-            el('nv-kind-filter').hidden = new Set(ENTRIES.map((item) => item.kind)).size < 2;
+            el('np-kind-filter').hidden = new Set(ENTRIES.map((item) => item.kind)).size < 2;
 
             document.querySelectorAll('[data-kind]').forEach((button) => {
                 button.addEventListener('click', () => {
@@ -516,7 +516,7 @@
                 });
             });
 
-            el('nv-format').addEventListener('click', (event) => {
+            el('np-format').addEventListener('click', (event) => {
                 const button = event.target.closest('[data-format]');
                 if (!button) return;
 
@@ -526,8 +526,8 @@
                 refreshPreview();
             });
 
-            el('nv-copy').addEventListener('click', async () => {
-                const button = el('nv-copy').querySelector('span');
+            el('np-copy').addEventListener('click', async () => {
+                const button = el('np-copy').querySelector('span');
                 const original = button.textContent;
 
                 try {
@@ -545,7 +545,7 @@
              * A single popover reused for every trigger. The top layer keeps it
              * clear of the sidebar's overflow, which would clip a CSS tooltip.
              */
-            const tooltip = el('nv-tooltip');
+            const tooltip = el('np-tooltip');
             const canPopover = typeof tooltip.showPopover === 'function';
 
             function showTooltip(target) {
@@ -583,16 +583,16 @@
             document.addEventListener('focusout', (event) => triggerFor(event) && hideTooltip());
             document.addEventListener('scroll', hideTooltip, true);
 
-            const dialog = el('nv-send-dialog');
+            const dialog = el('np-send-dialog');
 
-            el('nv-send').addEventListener('click', () => {
+            el('np-send').addEventListener('click', () => {
                 if (!state.selected) return;
 
-                el('nv-send-class').value = state.selected.class;
-                el('nv-send-variant').value = state.variant || '';
-                el('nv-send-locale').value = locale();
+                el('np-send-class').value = state.selected.class;
+                el('np-send-variant').value = state.variant || '';
+                el('np-send-locale').value = locale();
 
-                const values = el('nv-send-values');
+                const values = el('np-send-values');
                 values.innerHTML = '';
                 Object.entries(state.values).forEach(([name, value]) => {
                     const input = document.createElement('input');
@@ -605,12 +605,12 @@
                 dialog.showModal();
             });
 
-            el('nv-send-cancel').addEventListener('click', () => dialog.close());
+            el('np-send-cancel').addEventListener('click', () => dialog.close());
 
             if (state.selected) {
                 select(state.selected);
             } else {
-                el('nv-list').innerHTML = '<p class="nv-empty">Nothing discovered.</p>';
+                el('np-list').innerHTML = '<p class="np-empty">Nothing discovered.</p>';
             }
 
             renderFormats();

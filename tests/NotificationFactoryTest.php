@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
-use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
-use pxlrbt\LaravelNotificationViewer\NotificationFactory;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models\Customer;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Models\Ticket;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\ModelNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested\DeepNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\ScalarNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\SelfDescribingNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\UntypedNotification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\StatusEnum;
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
+use pxlrbt\LaravelNotificationPreview\NotificationFactory;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models\Customer;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Models\Ticket;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ModelNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Nested\DeepNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ScalarNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\SelfDescribingNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\UntypedNotification;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\StatusEnum;
 
 beforeEach(fn () => $this->factory = app(NotificationFactory::class));
 
@@ -72,25 +72,25 @@ it('falls back to the database for models without a factory', function () {
 });
 
 it('applies registered resolvers by type', function () {
-    NotificationViewer::resolve(Customer::class, fn () => new Customer(['name' => 'Resolved']));
+    NotificationPreview::resolve(Customer::class, fn () => new Customer(['name' => 'Resolved']));
 
     expect($this->factory->make(ModelNotification::class)->customer->name)->toBe('Resolved');
 });
 
 it('applies registered resolvers by parameter reference for untyped parameters', function () {
-    NotificationViewer::resolve(UntypedNotification::class.'::$model', fn () => ['resolved' => true]);
+    NotificationPreview::resolve(UntypedNotification::class.'::$model', fn () => ['resolved' => true]);
 
     expect($this->factory->make(UntypedNotification::class))->model->toBe(['resolved' => true]);
 });
 
 it('applies resolvers registered against a parent class', function () {
-    NotificationViewer::resolve(Notification::class.'::$model', fn () => 'from parent');
+    NotificationPreview::resolve(Notification::class.'::$model', fn () => 'from parent');
 
     expect($this->factory->make(UntypedNotification::class))->model->toBe('from parent');
 });
 
 it('lets ui overrides win over resolvers', function () {
-    NotificationViewer::resolve(ScalarNotification::class.'::$customerName', fn () => 'Resolved');
+    NotificationPreview::resolve(ScalarNotification::class.'::$customerName', fn () => 'Resolved');
 
     expect($this->factory->make(ScalarNotification::class, overrides: ['customerName' => 'Overridden']))
         ->customerName->toBe('Overridden');
@@ -114,14 +114,14 @@ it('casts overrides to the declared parameter type', function () {
 });
 
 it('ignores overrides for parameters that cannot round-trip through a query string', function () {
-    NotificationViewer::resolve(Customer::class, fn () => new Customer(['name' => 'Resolved']));
+    NotificationPreview::resolve(Customer::class, fn () => new Customer(['name' => 'Resolved']));
 
     expect($this->factory->make(ModelNotification::class, overrides: ['customer' => 'nonsense']))
         ->customer->name->toBe('Resolved');
 });
 
 it('short circuits reflection when a variant is registered', function () {
-    NotificationViewer::variants(ScalarNotification::class, [
+    NotificationPreview::variants(ScalarNotification::class, [
         'Custom' => fn () => new ScalarNotification(
             'Registered', '', '', '', '', 1, 1.0, false, [], StatusEnum::Shipped, Carbon::now(),
         ),
@@ -139,7 +139,7 @@ it('picks up variants declared on the notification itself', function () {
 });
 
 it('lets registered variants override ones declared on the notification', function () {
-    NotificationViewer::variants(SelfDescribingNotification::class, [
+    NotificationPreview::variants(SelfDescribingNotification::class, [
         'Formal' => fn () => new SelfDescribingNotification('registered'),
     ]);
 

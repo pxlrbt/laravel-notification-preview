@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Channels\SmsChannel;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Channels\SmsMessage;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Channels\SmsChannel;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Channels\SmsMessage;
 
 class MultiChannelNotification extends Notification
 {

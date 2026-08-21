@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 return [
     /*
-     * Disables discovery and route registration entirely. The viewer is always
+     * Disables discovery and route registration entirely. The preview is always
      * disabled in the production environment, regardless of this value.
      */
-    'enabled' => env('NOTIFICATION_VIEWER_ENABLED', true),
+    'enabled' => env('NOTIFICATION_PREVIEW_ENABLED', true),
 
     /*
-     * The kinds of classes the viewer looks for. Turn either off to keep it out
+     * The kinds of classes the preview looks for. Turn either off to keep it out
      * of discovery completely.
      */
-    'notifications' => env('NOTIFICATION_VIEWER_NOTIFICATIONS', true),
-    'mailables' => env('NOTIFICATION_VIEWER_MAILABLES', true),
+    'notifications' => env('NOTIFICATION_PREVIEW_NOTIFICATIONS', true),
+    'mailables' => env('NOTIFICATION_PREVIEW_MAILABLES', true),
 
     /*
      * The channels the preview can show. Mail is rendered as HTML and text;
@@ -24,17 +24,17 @@ return [
      */
     'channels' => ['mail'],
 
-    'url_prefix' => env('NOTIFICATION_VIEWER_URL_PREFIX', 'dev/notifications'),
+    'url_prefix' => env('NOTIFICATION_PREVIEW_URL_PREFIX', 'dev/notifications'),
 
     'middleware' => ['web'],
 
     /*
-     * Everybody outside the production environment may open the viewer, where
+     * Everybody outside the production environment may open the preview, where
      * its routes are never registered in the first place. Narrow that down with
-     * NotificationViewer::auth() in a service provider:
+     * NotificationPreview::auth() in a service provider:
      *
-     *   NotificationViewer::auth(fn () => app()->isLocal());
-     *   NotificationViewer::auth(fn (?Request $request) => $request?->user()?->isAdmin());
+     *   NotificationPreview::auth(fn () => app()->isLocal());
+     *   NotificationPreview::auth(fn (?Request $request) => $request?->user()?->isAdmin());
      */
 
     /*
@@ -47,7 +47,7 @@ return [
     ],
 
     /*
-     * Classes to hide from the viewer. Accepts fully qualified class names and
+     * Classes to hide from the preview. Accepts fully qualified class names and
      * namespaces; a namespace hides everything below it.
      *
      *   App\Notifications\Internal\DebugPing::class
@@ -56,7 +56,7 @@ return [
     'exclude' => [],
 
     /*
-     * Locales offered in the viewer. Null falls back to the directories
+     * Locales offered in the preview. Null falls back to the directories
      * inside the application's lang path.
      */
     'locales' => null,
@@ -64,5 +64,5 @@ return [
     /*
      * Prefills the "Send test" dialog.
      */
-    'test_email' => env('NOTIFICATION_VIEWER_TEST_EMAIL'),
+    'test_email' => env('NOTIFICATION_PREVIEW_TEST_EMAIL'),
 ];

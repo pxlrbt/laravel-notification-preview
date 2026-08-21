@@ -1,6 +1,6 @@
 {
-    "name": "pxlrbt/laravel-notification-viewer",
-    "description": "Browse, preview and test-send every notification and mailable in your Laravel app \u2014 mail as HTML and text, other channels as their payload.",
+    "name": "pxlrbt/laravel-notification-preview",
+    "description": "Browse, preview and test-send every notification and mailable in your Laravel app – mail as HTML and text, other channels as their payload.",
     "keywords": ["laravel", "mail", "mailable", "email", "notification", "preview", "viewer", "markdown-mail", "developer-tools"],
     "license": "MIT",
     "authors": [
@@ -25,12 +25,12 @@
     },
     "autoload": {
         "psr-4": {
-            "pxlrbt\\LaravelNotificationViewer\\": "src/"
+            "pxlrbt\\LaravelNotificationPreview\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "pxlrbt\\LaravelNotificationViewer\\Tests\\": "tests/"
+            "pxlrbt\\LaravelNotificationPreview\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -47,10 +47,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "pxlrbt\\LaravelNotificationViewer\\NotificationViewerServiceProvider"
+                "pxlrbt\\LaravelNotificationPreview\\NotificationPreviewServiceProvider"
             ],
             "aliases": {
-                "NotificationViewer": "pxlrbt\\LaravelNotificationViewer\\Facades\\NotificationViewer"
+                "NotificationPreview": "pxlrbt\\LaravelNotificationPreview\\Facades\\NotificationPreview"
             }
         }
     },

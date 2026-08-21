@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Mail;
-use pxlrbt\LaravelNotificationViewer\NotificationFactory;
-use pxlrbt\LaravelNotificationViewer\NotificationInspector;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail\InvoiceReady;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail\LegacyWelcome;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail\MarkdownReceipt;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested\DeepNotification;
+use pxlrbt\LaravelNotificationPreview\NotificationFactory;
+use pxlrbt\LaravelNotificationPreview\NotificationInspector;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Mail\InvoiceReady;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Mail\LegacyWelcome;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Mail\MarkdownReceipt;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\Nested\DeepNotification;
 
 it('builds a mailable from its constructor like a notification', function () {
     expect(app(NotificationFactory::class)->make(InvoiceReady::class))

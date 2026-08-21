@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications;
+namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
-use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\StatusEnum;
+use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\StatusEnum;
 
 class ScalarNotification extends Notification
 {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer;
+namespace pxlrbt\LaravelNotificationPreview;
 
 use Composer\Autoload\ClassLoader;
 use Illuminate\Support\Collection;

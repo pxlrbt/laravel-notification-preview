@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace pxlrbt\LaravelNotificationViewer;
+namespace pxlrbt\LaravelNotificationPreview;
 
 use BackedEnum;
 use Carbon\CarbonImmutable;
@@ -25,7 +25,7 @@ use UnitEnum;
 
 class NotificationFactory
 {
-    public function __construct(protected NotificationViewer $viewer) {}
+    public function __construct(protected NotificationPreview $registry) {}
 
     /**
      * @param  class-string  $class
@@ -33,7 +33,7 @@ class NotificationFactory
      */
     public function make(string $class, ?string $variant = null, array $overrides = []): Notification|Mailable
     {
-        $variants = $this->viewer->variantsFor($class);
+        $variants = $this->registry->variantsFor($class);
 
         if ($variant !== null && isset($variants[$variant])) {
             return $variants[$variant]->resolve();
@@ -81,20 +81,20 @@ class NotificationFactory
             return $this->castOverride($parameter, $overrides[$name]);
         }
 
-        if ($this->viewer->hasResolver($class.'::$'.$name)) {
-            return $this->viewer->callResolver($class.'::$'.$name);
+        if ($this->registry->hasResolver($class.'::$'.$name)) {
+            return $this->registry->callResolver($class.'::$'.$name);
         }
 
         foreach ($this->parentReferences($class, $name) as $reference) {
-            if ($this->viewer->hasResolver($reference)) {
-                return $this->viewer->callResolver($reference);
+            if ($this->registry->hasResolver($reference)) {
+                return $this->registry->callResolver($reference);
             }
         }
 
         $type = $parameter->getType();
 
-        if ($type instanceof ReflectionNamedType && $this->viewer->hasResolver($type->getName())) {
-            return $this->viewer->callResolver($type->getName());
+        if ($type instanceof ReflectionNamedType && $this->registry->hasResolver($type->getName())) {
+            return $this->registry->callResolver($type->getName());
         }
 
         if ($parameter->isDefaultValueAvailable()) {
@@ -244,7 +244,7 @@ class NotificationFactory
 
     /**
      * Only values that can round-trip through a query string may be edited in
-     * the viewer's UI.
+     * the preview's UI.
      */
     public function isOverridable(ReflectionParameter $parameter): bool
     {

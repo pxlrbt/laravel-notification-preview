@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
-use pxlrbt\LaravelNotificationViewer\Tests\TestCase;
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
+use pxlrbt\LaravelNotificationPreview\Tests\TestCase;
 
 uses(TestCase::class)->in(__DIR__);
 
-beforeEach(fn () => NotificationViewer::flush());
+beforeEach(fn () => NotificationPreview::flush());
