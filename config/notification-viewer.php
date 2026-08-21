@@ -21,6 +21,15 @@ return [
     'middleware' => ['web'],
 
     /*
+     * Everybody outside the production environment may open the viewer, where
+     * its routes are never registered in the first place. Narrow that down with
+     * NotificationViewer::auth() in a service provider:
+     *
+     *   NotificationViewer::auth(fn () => app()->isLocal());
+     *   NotificationViewer::auth(fn (?Request $request) => $request?->user()?->isAdmin());
+     */
+
+    /*
      * Directories scanned recursively. The namespace of each directory is read
      * from Composer's PSR-4 map, so directories outside it are skipped.
      */

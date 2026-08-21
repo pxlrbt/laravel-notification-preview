@@ -6,6 +6,7 @@ namespace pxlrbt\LaravelNotificationViewer;
 
 use Illuminate\Support\Facades\Route;
 use pxlrbt\LaravelNotificationViewer\Http\Controllers\NotificationViewerController;
+use pxlrbt\LaravelNotificationViewer\Http\Middleware\Authorize;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -38,7 +39,7 @@ class NotificationViewerServiceProvider extends PackageServiceProvider
         /** @var array<int, string> $middleware */
         $middleware = config('notification-viewer.middleware', ['web']);
 
-        Route::middleware($middleware)
+        Route::middleware([...$middleware, Authorize::class])
             ->prefix($prefix)
             ->name('notification-viewer.')
             ->group(function (): void {

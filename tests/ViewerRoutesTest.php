@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\BrokenNotification;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested\DeepNotification;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\NotANotification;
+use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\ScalarNotification;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\SelfDescribingNotification;
 
 it('lists every discovered notification on the index', function () {
@@ -92,4 +95,34 @@ it('keeps serving html when no format is asked for', function () {
     $this->get('/dev/notifications/preview?class='.urlencode(DeepNotification::class))
         ->assertOk()
         ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+});
+
+it('lets everybody in outside production by default', function () {
+    // Act & Assert
+    $this->get('/dev/notifications')->assertOk();
+});
+
+it('denies anybody the auth closure turns down', function () {
+    // Arrange
+    NotificationViewer::auth(fn () => false);
+
+    // Act & Assert
+    $this->get('/dev/notifications')->assertForbidden();
+    $this->get('/dev/notifications/preview?class='.urlencode(ScalarNotification::class))->assertForbidden();
+});
+
+it('passes the request to the auth closure', function () {
+    // Arrange
+    $seen = null;
+    NotificationViewer::auth(function (?Request $request) use (&$seen) {
+        $seen = $request?->path();
+
+        return true;
+    });
+
+    // Act
+    $this->get('/dev/notifications')->assertOk();
+
+    // Assert
+    expect($seen)->toBe('dev/notifications');
 });

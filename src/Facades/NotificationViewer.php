@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace pxlrbt\LaravelNotificationViewer\Facades;
 
 use Closure;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 use pxlrbt\LaravelNotificationViewer\NotificationViewer as NotificationViewerManager;
 use pxlrbt\LaravelNotificationViewer\Variant;
 
 /**
+ * @method static NotificationViewerManager auth(Closure $callback)
+ * @method static bool allows(?Request $request = null)
  * @method static NotificationViewerManager resolve(string $key, Closure $resolver)
  * @method static NotificationViewerManager variants(string $notification, array<string, Closure|Variant> $variants)
  * @method static NotificationViewerManager group(string $notification, string $group)

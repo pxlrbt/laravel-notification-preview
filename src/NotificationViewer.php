@@ -6,6 +6,7 @@ namespace pxlrbt\LaravelNotificationViewer;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notification;
@@ -34,8 +35,30 @@ class NotificationViewer
 
     protected ?Closure $notifiableFactory = null;
 
+    protected ?Closure $authorization = null;
+
     /** @var Collection<int, class-string>|null */
     protected ?Collection $cachedClasses = null;
+
+    /**
+     * Decides who may open the viewer. Without one, everybody outside the
+     * production environment can, where the routes are never registered.
+     */
+    public function auth(Closure $callback): static
+    {
+        $this->authorization = $callback;
+
+        return $this;
+    }
+
+    public function allows(?Request $request = null): bool
+    {
+        if ($this->authorization === null) {
+            return ! app()->isProduction();
+        }
+
+        return (bool) ($this->authorization)($request);
+    }
 
     /**
      * Registers a value used whenever a constructor parameter of the given type
@@ -324,6 +347,7 @@ class NotificationViewer
         $this->registered = [];
         $this->excluded = [];
         $this->notifiableFactory = null;
+        $this->authorization = null;
         $this->cachedClasses = null;
     }
 }

@@ -66,6 +66,23 @@ alternative the mail channel would send: a `->text()` view when there is one,
 otherwise the markdown template rendered through the text components. Messages
 built from a single HTML view have no text part and say so.
 
+### Who may open it
+
+The viewer's routes are never registered in the production environment. Everywhere
+else everybody may open it, until you say otherwise:
+
+```php
+use pxlrbt\LaravelNotificationViewer\Facades\NotificationViewer;
+
+// Local machines only.
+NotificationViewer::auth(fn () => app()->isLocal());
+
+// Or specific people, wherever they are.
+NotificationViewer::auth(fn (?Request $request) => $request?->user()?->isAdmin());
+```
+
+Anyone the closure turns down gets a 403.
+
 ### Hiding classes
 
 `exclude` takes fully qualified class names and namespaces. A namespace hides
