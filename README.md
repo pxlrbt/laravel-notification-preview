@@ -9,6 +9,20 @@ variants you register.
 
 ![Screenshot](.github/screenshot.png)
 
+## Features
+
+- Discovers every notification and mailable in the directories you point it at,
+  reading their namespaces from Composer's PSR-4 map.
+- Builds each class by resolving its constructor arguments from their types, with
+  resolvers and named variants for the ones reflection cannot guess.
+- Renders the HTML and the plain-text side of a mail, at desktop, tablet and
+  mobile widths.
+- Shows every other channel as the JSON payload it would hand its provider.
+- Switches locale, edits scalar arguments in place and sends a real test mail to
+  any address.
+- Never registers its routes in production; gate it anywhere else with an auth
+  closure.
+
 ## Installation
 
 ```bash
