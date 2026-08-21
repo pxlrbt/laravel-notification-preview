@@ -22,14 +22,20 @@
             --nv-accent-soft: #eef2ff;
             --nv-danger: #dc2626;
             --nv-radius: 10px;
+            --nv-control: 38px;
             --nv-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
             --nv-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
         }
 
+        html { height: 100%; }
+
         body {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
             margin: 0;
             padding: 24px;
-            min-height: 100vh;
+            overflow: hidden;
             background: var(--nv-bg);
             color: var(--nv-text);
             font-family: var(--nv-font);
@@ -40,6 +46,7 @@
 
         h1 {
             display: flex;
+            flex-shrink: 0;
             align-items: center;
             gap: 12px;
             margin: 0 0 20px;
@@ -53,7 +60,8 @@
         .nv-shell {
             display: grid;
             grid-template-columns: 320px minmax(0, 1fr);
-            height: calc(100vh - 100px);
+            flex: 1;
+            min-height: 0;
             background: var(--nv-surface);
             border: 1px solid var(--nv-border);
             border-radius: 16px;
@@ -102,7 +110,8 @@
             flex: 1;
             min-height: 0;
             overflow-y: auto;
-            padding: 12px;
+            padding: 12px 14px 12px 12px;
+            scrollbar-gutter: stable;
         }
 
         .nv-group-label {
@@ -190,6 +199,7 @@
 
         .nv-segmented {
             display: inline-flex;
+            height: var(--nv-control);
             padding: 3px;
             border: 1px solid var(--nv-border);
             border-radius: var(--nv-radius);
@@ -199,8 +209,10 @@
         .nv-segmented button {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            padding: 5px 12px;
+            height: 100%;
+            padding: 0 12px;
             border: 0;
             border-radius: 7px;
             background: transparent;
@@ -217,11 +229,14 @@
 
         .nv-segmented svg { width: 15px; height: 15px; }
 
+        .nv-segmented-icons button { width: 38px; padding: 0; }
+
         .nv-button {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 8px 14px;
+            height: var(--nv-control);
+            padding: 0 14px;
             border: 1px solid var(--nv-border-strong);
             border-radius: var(--nv-radius);
             background: var(--nv-surface);
@@ -242,15 +257,30 @@
 
         .nv-button svg { width: 15px; height: 15px; }
 
+        select.nv-select,
+        .nv-table select {
+            appearance: none;
+            padding-right: 32px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 14px;
+        }
+
         select.nv-select {
-            padding: 8px 10px;
+            max-width: 220px;
+            height: var(--nv-control);
+            padding: 0 32px 0 14px;
             border: 1px solid var(--nv-border-strong);
             border-radius: var(--nv-radius);
-            background: var(--nv-surface);
+            background-color: var(--nv-surface);
             font: inherit;
-            color: inherit;
+            color: var(--nv-text);
+            text-overflow: ellipsis;
             cursor: pointer;
         }
+
+        select.nv-select:hover { background-color: var(--nv-muted); }
 
         .nv-envelope {
             display: flex;
@@ -282,6 +312,25 @@
             background: var(--nv-muted);
         }
 
+        #nv-pane-preview { position: relative; overflow: hidden; }
+
+        .nv-copy-floating {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 1;
+            height: 30px;
+            padding: 0 11px;
+            background: rgb(255 255 255 / 0.9);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
+            opacity: 0.35;
+            transition: opacity 0.15s;
+        }
+
+        #nv-pane-preview:hover .nv-copy-floating,
+        .nv-copy-floating:focus-visible { opacity: 1; }
+
         .nv-frame-wrap {
             height: 100%;
             margin: 0 auto;
@@ -289,10 +338,10 @@
         }
 
         .nv-frame-wrap iframe {
+            display: block;
             width: 100%;
             height: 100%;
             border: 0;
-            background: var(--nv-surface);
         }
 
         /* ---------- details ---------- */

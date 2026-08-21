@@ -30,7 +30,10 @@ class NotificationViewerController extends Controller
 
     public function index(): View
     {
-        return view('notification-viewer::index', [
+        /** @var view-string $view */
+        $view = 'notification-viewer::index';
+
+        return view($view, [
             'notifications' => $this->inspector->all(),
             'locales' => $this->viewer->locales(),
             'testEmail' => config('notification-viewer.test_email'),
@@ -44,7 +47,10 @@ class NotificationViewerController extends Controller
         try {
             $html = (string) $this->build($request, $class)->render();
         } catch (Throwable $exception) {
-            $html = view('notification-viewer::error', ['exception' => $exception])->render();
+            /** @var view-string $view */
+            $view = 'notification-viewer::error';
+
+            $html = view($view, ['exception' => $exception])->render();
         }
 
         return response($html)->header('Content-Type', 'text/html; charset=UTF-8');
@@ -61,7 +67,7 @@ class NotificationViewerController extends Controller
         $class = $request->string('notification')->toString();
 
         $mail = $this->build($request, $class);
-        $subject = $mail->subject ?? class_basename($class);
+        $subject = $mail->subject !== '' ? $mail->subject : class_basename($class);
         $html = (string) $mail->render();
         $recipient = $request->string('email')->toString();
 

@@ -238,6 +238,7 @@ class NotificationViewer
             return $configured;
         }
 
+        /** @var list<string> */
         return Collection::make(glob(lang_path('*'), GLOB_ONLYDIR) ?: [])
             ->map(fn (string $path) => basename($path))
             ->sort()

@@ -39,33 +39,23 @@
                     </select>
                 @endif
 
-                <div class="nv-segmented" role="group" aria-label="Viewport">
-                    <button type="button" data-viewport="desktop">
+                <div class="nv-segmented nv-segmented-icons" role="group" aria-label="Viewport">
+                    <button type="button" data-viewport="desktop" title="Desktop" aria-label="Desktop">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>
                         </svg>
-                        Desktop
                     </button>
-                    <button type="button" data-viewport="tablet">
+                    <button type="button" data-viewport="tablet" title="Tablet" aria-label="Tablet">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>
                         </svg>
-                        Tablet
                     </button>
-                    <button type="button" data-viewport="mobile">
+                    <button type="button" data-viewport="mobile" title="Mobile" aria-label="Mobile">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 18h.01"/>
                         </svg>
-                        Mobile
                     </button>
                 </div>
-
-                <button type="button" class="nv-button" id="nv-copy">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
-                    </svg>
-                    <span>Copy HTML</span>
-                </button>
 
                 <button type="button" class="nv-button nv-button-primary" id="nv-send">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -85,6 +75,12 @@
             </div>
 
             <div class="nv-pane" id="nv-pane-preview">
+                <button type="button" class="nv-button nv-copy-floating" id="nv-copy" title="Copy the rendered HTML">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
+                    </svg>
+                    <span>Copy HTML</span>
+                </button>
                 <div class="nv-frame-wrap" id="nv-frame-wrap">
                     <iframe id="nv-frame" sandbox="allow-same-origin" title="Notification preview"></iframe>
                 </div>
@@ -154,7 +150,7 @@
             }
 
             function initials(label) {
-                return label.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
+                return (label.match(/\p{L}+/gu) || []).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
             }
 
             function matches(item, term) {
@@ -174,14 +170,17 @@
                     return;
                 }
 
+                const grouped = visible.some((item) => item.group);
                 let currentGroup;
 
-                visible.forEach((item) => {
-                    if (item.group && item.group !== currentGroup) {
-                        currentGroup = item.group;
+                visible.forEach((item, index) => {
+                    const group = item.group || 'Allgemein';
+
+                    if (grouped && (index === 0 || group !== currentGroup)) {
+                        currentGroup = group;
                         const heading = document.createElement('p');
                         heading.className = 'nv-group-label';
-                        heading.textContent = item.group;
+                        heading.textContent = group;
                         list.appendChild(heading);
                     }
 
@@ -346,6 +345,42 @@
             function refreshPreview() {
                 frame.src = previewUrl();
             }
+
+            /*
+             * Mail templates usually paint their background on an inner wrapper
+             * rather than on <body>, so the frame would show white below the
+             * message. Copy that colour onto the frame and the pane instead.
+             */
+            function matchPreviewBackground() {
+                const pane = el('nv-pane-preview');
+                let color = '';
+
+                try {
+                    const doc = frame.contentDocument;
+                    // The wrapper element carries the page colour; <body> is usually plain white.
+                    const candidates = [...doc.body.children, doc.body].filter(Boolean);
+
+                    for (const node of candidates) {
+                        const background = getComputedStyle(node).backgroundColor;
+
+                        if (background && !/^(transparent|rgba\(0, 0, 0, 0\))$/.test(background)) {
+                            color = background;
+                            break;
+                        }
+                    }
+
+                    // An opaque <body> paints the whole frame, hiding the colour we just picked.
+                    doc.documentElement.style.background = 'transparent';
+                    doc.body.style.background = 'transparent';
+                } catch (error) {
+                    color = '';
+                }
+
+                frame.style.background = color || 'var(--nv-surface)';
+                pane.style.background = color || 'var(--nv-muted)';
+            }
+
+            frame.addEventListener('load', matchPreviewBackground);
 
             function renderPane() {
                 document.querySelectorAll('[data-pane]').forEach((button) => {

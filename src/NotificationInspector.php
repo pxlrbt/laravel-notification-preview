@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace pxlrbt\LaravelNotificationViewer;
 
+use BackedEnum;
+use DateTimeInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use ReflectionClass;
 use ReflectionParameter;
 use Throwable;
+use UnitEnum;
 
 class NotificationInspector
 {
@@ -28,8 +31,12 @@ class NotificationInspector
      */
     public function all(): array
     {
+        /** @var list<array<string, mixed>> */
         return $this->viewer->classes()
             ->map(fn (string $class) => $this->describe($class))
+            // Grouped notifications first, in group order, then the ungrouped rest.
+            ->sortBy(fn (array $row) => ($row['group'] ?? "\u{FFFF}")."\u{0000}".$row['label'])
+            ->values()
             ->all();
     }
 
@@ -144,9 +151,9 @@ class NotificationInspector
             $value === null => '—',
             is_bool($value) => $value ? 'true' : 'false',
             is_scalar($value) => (string) $value,
-            $value instanceof \BackedEnum => (string) $value->value,
-            $value instanceof \UnitEnum => $value->name,
-            $value instanceof \DateTimeInterface => $value->format('Y-m-d\TH:i'),
+            $value instanceof BackedEnum => (string) $value->value,
+            $value instanceof UnitEnum => $value->name,
+            $value instanceof DateTimeInterface => $value->format('Y-m-d\TH:i'),
             is_object($value) => class_basename($value),
             is_array($value) => 'array('.count($value).')',
             default => gettype($value),
