@@ -34,7 +34,7 @@
             flex-direction: column;
             height: 100%;
             margin: 0;
-            padding: 24px;
+            padding: 16px;
             overflow: hidden;
             background: var(--nv-bg);
             color: var(--nv-text);
@@ -43,19 +43,6 @@
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
         }
-
-        h1 {
-            display: flex;
-            flex-shrink: 0;
-            align-items: center;
-            gap: 12px;
-            margin: 0 0 20px;
-            font-size: 28px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-        }
-
-        h1 svg { width: 26px; height: 26px; }
 
         .nv-shell {
             display: grid;
@@ -169,7 +156,6 @@
             border-radius: 6px;
             background: var(--nv-muted);
             color: var(--nv-text-soft);
-            cursor: help;
         }
 
         .nv-kind svg { width: 13px; height: 13px; }
@@ -465,6 +451,25 @@
             border-radius: var(--nv-radius);
             background: #f0fdf4;
             color: #166534;
+        }
+
+        .nv-tooltip {
+            position: fixed;
+            inset: auto;
+            width: max-content;
+            max-width: 320px;
+            margin: 0;
+            padding: 5px 9px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--nv-text);
+            color: #fff;
+            font-family: var(--nv-font);
+            font-size: 12px;
+            line-height: 1.4;
+            /* File paths have no natural break opportunities. */
+            overflow-wrap: anywhere;
+            pointer-events: none;
         }
 
         dialog {

@@ -1,14 +1,6 @@
 @extends('notification-viewer::layout')
 
 @section('content')
-    <h1>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 13V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9"/>
-            <path d="m2 8 9.2 5.6a1.5 1.5 0 0 0 1.6 0L22 8"/>
-        </svg>
-        Notification Viewer
-    </h1>
-
     <div class="nv-shell">
         <aside class="nv-sidebar">
             <div class="nv-sidebar-header">
@@ -48,17 +40,17 @@
                 @endif
 
                 <div class="nv-segmented nv-segmented-icons" role="group" aria-label="Viewport">
-                    <button type="button" data-viewport="desktop" title="Desktop" aria-label="Desktop">
+                    <button type="button" data-viewport="desktop" data-tooltip="Desktop" aria-label="Desktop">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>
                         </svg>
                     </button>
-                    <button type="button" data-viewport="tablet" title="Tablet" aria-label="Tablet">
+                    <button type="button" data-viewport="tablet" data-tooltip="Tablet" aria-label="Tablet">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/>
                         </svg>
                     </button>
-                    <button type="button" data-viewport="mobile" title="Mobile" aria-label="Mobile">
+                    <button type="button" data-viewport="mobile" data-tooltip="Mobile" aria-label="Mobile">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="7" y="2" width="10" height="20" rx="2"/><path d="M12 18h.01"/>
                         </svg>
@@ -83,7 +75,7 @@
             </div>
 
             <div class="nv-pane" id="nv-pane-preview">
-                <button type="button" class="nv-button nv-copy-floating" id="nv-copy" title="Copy the rendered HTML">
+                <button type="button" class="nv-button nv-copy-floating" id="nv-copy" data-tooltip="Copy the rendered HTML">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
                     </svg>
@@ -102,6 +94,8 @@
             </div>
         </main>
     </div>
+
+    <div id="nv-tooltip" class="nv-tooltip" popover="manual" role="tooltip"></div>
 
     <dialog id="nv-send-dialog">
         <form method="POST" action="{{ route('notification-viewer.send') }}" id="nv-send-form">
@@ -223,7 +217,7 @@
                     if (kind) {
                         const badge = document.createElement('span');
                         badge.className = 'nv-kind';
-                        badge.title = kind.label;
+                        badge.dataset.tooltip = kind.label;
                         badge.setAttribute('aria-label', kind.label);
                         badge.innerHTML = kind.icon;
                         title.appendChild(badge);
@@ -237,7 +231,7 @@
                     const path = document.createElement('div');
                     path.className = 'nv-item-path';
                     path.textContent = item.path;
-                    path.title = item.path;
+                    path.dataset.tooltip = item.path;
 
                     button.append(title, subject, path);
                     button.addEventListener('click', () => select(item));
@@ -507,6 +501,48 @@
 
                 setTimeout(() => { button.textContent = original; }, 1500);
             });
+
+            /*
+             * A single popover reused for every trigger. The top layer keeps it
+             * clear of the sidebar's overflow, which would clip a CSS tooltip.
+             */
+            const tooltip = el('nv-tooltip');
+            const canPopover = typeof tooltip.showPopover === 'function';
+
+            function showTooltip(target) {
+                if (!canPopover) return;
+
+                tooltip.textContent = target.dataset.tooltip;
+                tooltip.showPopover();
+
+                const anchor = target.getBoundingClientRect();
+                const self = tooltip.getBoundingClientRect();
+                const left = anchor.left + anchor.width / 2 - self.width / 2;
+                const top = anchor.top - self.height - 8;
+
+                tooltip.style.left = `${Math.max(8, Math.min(left, window.innerWidth - self.width - 8))}px`;
+                tooltip.style.top = `${top < 8 ? anchor.bottom + 8 : top}px`;
+            }
+
+            function hideTooltip() {
+                if (canPopover && tooltip.matches(':popover-open')) tooltip.hidePopover();
+            }
+
+            const triggerFor = (event) => event.target?.closest?.('[data-tooltip]');
+
+            document.addEventListener('mouseover', (event) => {
+                const trigger = triggerFor(event);
+                if (trigger) showTooltip(trigger);
+            });
+
+            document.addEventListener('focusin', (event) => {
+                const trigger = triggerFor(event);
+                if (trigger) showTooltip(trigger);
+            });
+
+            document.addEventListener('mouseout', (event) => triggerFor(event) && hideTooltip());
+            document.addEventListener('focusout', (event) => triggerFor(event) && hideTooltip());
+            document.addEventListener('scroll', hideTooltip, true);
 
             const dialog = el('nv-send-dialog');
 
