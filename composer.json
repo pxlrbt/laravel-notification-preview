@@ -1,7 +1,7 @@
 {
     "name": "pxlrbt/laravel-notification-viewer",
-    "description": "Browse, preview and test-send every Laravel notification in your app.",
-    "keywords": ["laravel", "notifications", "mail", "preview", "developer-tools"],
+    "description": "Browse, preview and test-send every notification and mailable in your Laravel app \u2014 mail as HTML and text, other channels as their payload.",
+    "keywords": ["laravel", "mail", "mailable", "email", "notification", "preview", "viewer", "markdown-mail", "developer-tools"],
     "license": "MIT",
     "authors": [
         {
