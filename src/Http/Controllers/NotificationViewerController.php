@@ -9,15 +9,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use pxlrbt\LaravelNotificationViewer\NotificationFactory;
 use pxlrbt\LaravelNotificationViewer\NotificationInspector;
 use pxlrbt\LaravelNotificationViewer\NotificationViewer;
-use RuntimeException;
+use pxlrbt\LaravelNotificationViewer\PreviewRenderer;
 use Throwable;
 
 class NotificationViewerController extends Controller
@@ -26,6 +24,7 @@ class NotificationViewerController extends Controller
         protected NotificationViewer $viewer,
         protected NotificationFactory $factory,
         protected NotificationInspector $inspector,
+        protected PreviewRenderer $renderer,
     ) {}
 
     public function index(): View
@@ -34,7 +33,7 @@ class NotificationViewerController extends Controller
         $view = 'notification-viewer::index';
 
         return view($view, [
-            'notifications' => $this->inspector->all(),
+            'entries' => $this->inspector->all(),
             'locales' => $this->viewer->locales(),
             'testEmail' => config('notification-viewer.test_email'),
         ]);
@@ -45,7 +44,7 @@ class NotificationViewerController extends Controller
         $class = $this->validatedClass($request);
 
         try {
-            $html = (string) $this->build($request, $class)->render();
+            $html = $this->build($request, $class)['html'];
         } catch (Throwable $exception) {
             /** @var view-string $view */
             $view = 'notification-viewer::error';
@@ -60,22 +59,21 @@ class NotificationViewerController extends Controller
     {
         $request->validate([
             'email' => ['required', 'email'],
-            'notification' => ['required', 'string', Rule::in($this->viewer->classes()->all())],
+            'class' => ['required', 'string', Rule::in($this->viewer->classes()->all())],
         ]);
 
-        /** @var class-string<Notification> $class */
-        $class = $request->string('notification')->toString();
+        /** @var class-string $class */
+        $class = $request->string('class')->toString();
 
-        $mail = $this->build($request, $class);
-        $subject = $mail->subject !== '' ? $mail->subject : class_basename($class);
-        $html = (string) $mail->render();
+        $rendered = $this->build($request, $class);
+        $subject = $rendered['subject'] ?? class_basename($class);
         $recipient = $request->string('email')->toString();
 
         /*
          * Sends the exact markup shown in the preview rather than routing through
-         * the notification channel, so what you test is what you saw.
+         * the mail channel, so what you test is what you saw.
          */
-        Mail::html($html, function ($message) use ($recipient, $subject): void {
+        Mail::html($rendered['html'], function ($message) use ($recipient, $subject): void {
             $message->to($recipient)->subject($subject);
         });
 
@@ -83,19 +81,15 @@ class NotificationViewerController extends Controller
     }
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
+     * @return array{html: string, subject: ?string, from: ?string, view: ?string, channels: list<string>}
      */
-    protected function build(Request $request, string $class): MailMessage
+    protected function build(Request $request, string $class): array
     {
         $variation = $request->input('variation') ?: null;
         $variation = is_string($variation) ? $variation : null;
 
-        $notification = $this->factory->make($class, $variation, $this->overrides($request));
-
-        if (! method_exists($notification, 'toMail')) {
-            throw new RuntimeException(class_basename($class).' has no toMail() method.');
-        }
-
+        $previewable = $this->factory->make($class, $variation, $this->overrides($request));
         $notifiable = $this->inspector->notifiableFor($class, $variation);
         $locale = $request->input('locale');
 
@@ -107,25 +101,19 @@ class NotificationViewerController extends Controller
             }
         }
 
-        $mail = $notification->toMail($notifiable);
-
-        if (! $mail instanceof MailMessage) {
-            throw new RuntimeException(class_basename($class).' does not return a MailMessage.');
-        }
-
-        return $mail;
+        return $this->renderer->render($previewable, $notifiable);
     }
 
     /**
-     * @return class-string<Notification>
+     * @return class-string
      */
     protected function validatedClass(Request $request): string
     {
-        $class = $request->string('notification')->toString();
+        $class = $request->string('class')->toString();
 
         abort_unless($class !== '' && $this->viewer->contains($class), 404);
 
-        /** @var class-string<Notification> $class */
+        /** @var class-string $class */
         return $class;
     }
 

@@ -26,6 +26,7 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
         $app['config']->set('mail.default', 'array');
         $app['config']->set('database.default', 'testing');
+        $app['config']->set('view.paths', [__DIR__.'/Fixtures/views']);
 
         $app['config']->set('notification-viewer.url_prefix', 'dev/notifications');
         $app['config']->set('notification-viewer.paths', [

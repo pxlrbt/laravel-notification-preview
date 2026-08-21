@@ -9,10 +9,12 @@ use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionNamedType;
 use ReflectionParameter;
@@ -26,10 +28,10 @@ class NotificationFactory
     public function __construct(protected NotificationViewer $viewer) {}
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      */
-    public function make(string $class, ?string $variation = null, array $overrides = []): Notification
+    public function make(string $class, ?string $variation = null, array $overrides = []): Notification|Mailable
     {
         $variations = $this->viewer->variationsFor($class);
 
@@ -45,28 +47,30 @@ class NotificationFactory
     }
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      */
-    protected function makeFromConstructor(string $class, array $overrides): Notification
+    protected function makeFromConstructor(string $class, array $overrides): Notification|Mailable
     {
         $reflection = new ReflectionClass($class);
         $constructor = $reflection->getConstructor();
 
-        if ($constructor === null || $constructor->getNumberOfParameters() === 0) {
-            return $reflection->newInstance();
-        }
-
-        $arguments = array_map(
+        $arguments = $constructor === null ? [] : array_map(
             fn (ReflectionParameter $parameter) => $this->resolveParameter($class, $parameter, $overrides),
             $constructor->getParameters(),
         );
 
-        return $reflection->newInstanceArgs($arguments);
+        $instance = $reflection->newInstanceArgs($arguments);
+
+        if (! $instance instanceof Notification && ! $instance instanceof Mailable) {
+            throw new InvalidArgumentException($class.' is neither a notification nor a mailable.');
+        }
+
+        return $instance;
     }
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      */
     public function resolveParameter(string $class, ReflectionParameter $parameter, array $overrides = []): mixed

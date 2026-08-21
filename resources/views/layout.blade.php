@@ -79,16 +79,22 @@
             background: var(--nv-surface);
         }
 
-        .nv-search {
-            position: relative;
+        .nv-sidebar-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             padding: 16px;
             border-bottom: 1px solid var(--nv-border);
+        }
+
+        .nv-search {
+            position: relative;
         }
 
         .nv-search svg {
             position: absolute;
             top: 50%;
-            left: 28px;
+            left: 12px;
             width: 15px;
             height: 15px;
             transform: translateY(-50%);
@@ -145,8 +151,21 @@
         }
 
         .nv-item-title {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
             font-weight: 600;
             color: var(--nv-text);
+        }
+
+        .nv-kind {
+            padding: 1px 7px;
+            border-radius: 999px;
+            background: var(--nv-muted);
+            border: 1px solid var(--nv-border-strong);
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--nv-text-soft);
         }
 
         .nv-item-subject {
@@ -230,6 +249,14 @@
         .nv-segmented svg { width: 15px; height: 15px; }
 
         .nv-segmented-icons button { width: 38px; padding: 0; }
+
+        .nv-kind-filter { width: 100%; }
+
+        .nv-kind-filter button {
+            flex: 1;
+            padding: 0 4px;
+            font-size: 12px;
+        }
 
         .nv-button {
             display: inline-flex;

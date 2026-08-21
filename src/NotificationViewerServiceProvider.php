@@ -23,6 +23,7 @@ class NotificationViewerServiceProvider extends PackageServiceProvider
     {
         $this->app->singleton(NotificationViewer::class);
         $this->app->singleton(NotificationFactory::class);
+        $this->app->singleton(PreviewRenderer::class);
         $this->app->singleton(NotificationInspector::class);
     }
 

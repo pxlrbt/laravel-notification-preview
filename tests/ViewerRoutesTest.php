@@ -16,7 +16,7 @@ it('lists every discovered notification on the index', function () {
 });
 
 it('renders a notification preview as html', function () {
-    $this->get('/dev/notifications/preview?notification='.urlencode(DeepNotification::class))
+    $this->get('/dev/notifications/preview?class='.urlencode(DeepNotification::class))
         ->assertOk()
         ->assertHeader('Content-Type', 'text/html; charset=UTF-8')
         ->assertSee('Nested notification.');
@@ -24,19 +24,19 @@ it('renders a notification preview as html', function () {
 
 it('renders the selected variation', function () {
     $this->get('/dev/notifications/preview?'.http_build_query([
-        'notification' => SelfDescribingNotification::class,
+        'class' => SelfDescribingNotification::class,
         'variation' => 'Formal',
     ]))->assertOk()->assertSee('Tone is formal.');
 });
 
 it('renders errors inside the frame instead of failing the request', function () {
-    $this->get('/dev/notifications/preview?notification='.urlencode(BrokenNotification::class))
+    $this->get('/dev/notifications/preview?class='.urlencode(BrokenNotification::class))
         ->assertOk()
         ->assertSee('Broken on purpose.');
 });
 
 it('refuses to preview a class it does not know', function () {
-    $this->get('/dev/notifications/preview?notification='.urlencode(NotANotification::class))
+    $this->get('/dev/notifications/preview?class='.urlencode(NotANotification::class))
         ->assertNotFound();
 
     $this->get('/dev/notifications/preview')->assertNotFound();
@@ -45,7 +45,7 @@ it('refuses to preview a class it does not know', function () {
 it('sends a test mail carrying the rendered preview', function () {
     $this->post('/dev/notifications/send', [
         'email' => 'someone@example.com',
-        'notification' => DeepNotification::class,
+        'class' => DeepNotification::class,
     ])->assertRedirect()->assertSessionHas('notification-viewer.status');
 
     $messages = Mail::mailer()->getSymfonyTransport()->messages();
@@ -62,14 +62,14 @@ it('sends a test mail carrying the rendered preview', function () {
 it('validates the send request', function () {
     $this->post('/dev/notifications/send', [
         'email' => 'not-an-email',
-        'notification' => NotANotification::class,
-    ])->assertSessionHasErrors(['email', 'notification']);
+        'class' => NotANotification::class,
+    ])->assertSessionHasErrors(['email', 'class']);
 });
 
 it('carries ui overrides into the sent mail', function () {
     $this->post('/dev/notifications/send', [
         'email' => 'someone@example.com',
-        'notification' => SelfDescribingNotification::class,
+        'class' => SelfDescribingNotification::class,
         'variation' => 'Formal',
     ])->assertRedirect();
 

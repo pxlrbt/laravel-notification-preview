@@ -6,33 +6,35 @@ namespace pxlrbt\LaravelNotificationViewer;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class NotificationViewer
 {
     /** @var array<string, Closure> */
     protected array $resolvers = [];
 
-    /** @var array<class-string<Notification>, array<string, Variation>> */
+    /** @var array<class-string, array<string, Variation>> */
     protected array $variations = [];
 
-    /** @var array<class-string<Notification>, string> */
+    /** @var array<class-string, string> */
     protected array $groups = [];
 
-    /** @var array<class-string<Notification>, string> */
+    /** @var array<class-string, string> */
     protected array $labels = [];
 
-    /** @var list<class-string<Notification>> */
+    /** @var list<class-string> */
     protected array $registered = [];
 
-    /** @var list<class-string<Notification>> */
+    /** @var list<string> */
     protected array $excluded = [];
 
     protected ?Closure $notifiableFactory = null;
 
-    /** @var Collection<int, class-string<Notification>>|null */
+    /** @var Collection<int, class-string>|null */
     protected ?Collection $cachedClasses = null;
 
     /**
@@ -63,7 +65,7 @@ class NotificationViewer
      * constructor does not cover.
      *
      * @param  array<string, Closure|Variation>  $variations
-     * @param  class-string<Notification>  $notification
+     * @param  class-string  $notification
      */
     public function variations(string $notification, array $variations): static
     {
@@ -77,7 +79,7 @@ class NotificationViewer
     }
 
     /**
-     * @param  class-string<Notification>  $notification
+     * @param  class-string  $notification
      * @return array<string, Variation>
      */
     public function variationsFor(string $notification): array
@@ -99,7 +101,7 @@ class NotificationViewer
     }
 
     /**
-     * @param  class-string<Notification>  $notification
+     * @param  class-string  $notification
      */
     public function group(string $notification, string $group): static
     {
@@ -109,7 +111,7 @@ class NotificationViewer
     }
 
     /**
-     * @param  class-string<Notification>  $notification
+     * @param  class-string  $notification
      */
     public function groupFor(string $notification): ?string
     {
@@ -117,7 +119,7 @@ class NotificationViewer
     }
 
     /**
-     * @param  class-string<Notification>  $notification
+     * @param  class-string  $notification
      */
     public function label(string $notification, string $label): static
     {
@@ -127,7 +129,7 @@ class NotificationViewer
     }
 
     /**
-     * @param  class-string<Notification>  $notification
+     * @param  class-string  $notification
      */
     public function labelFor(string $notification): ?string
     {
@@ -166,9 +168,9 @@ class NotificationViewer
     }
 
     /**
-     * Adds notifications that live outside the scanned paths.
+     * Adds notifications or mailables that live outside the scanned paths.
      *
-     * @param  class-string<Notification>|list<class-string<Notification>>  $notifications
+     * @param  class-string|list<class-string>  $notifications
      */
     public function register(string|array $notifications): static
     {
@@ -182,7 +184,9 @@ class NotificationViewer
     }
 
     /**
-     * @param  class-string<Notification>|list<class-string<Notification>>  $notifications
+     * Hides notifications or mailables. Accepts class names or namespaces.
+     *
+     * @param  string|list<string>  $notifications
      */
     public function exclude(string|array $notifications): static
     {
@@ -196,18 +200,83 @@ class NotificationViewer
     }
 
     /**
-     * @return Collection<int, class-string<Notification>>
+     * @return Collection<int, class-string>
      */
     public function classes(): Collection
     {
-        return $this->cachedClasses ??= (new DiscoveredNotifications)
-            ->all($this->paths())
+        $types = $this->types();
+
+        return $this->cachedClasses ??= (new Discovery)
+            ->all($this->paths(), $types)
             ->merge($this->registered)
             ->unique()
-            ->reject(fn (string $class) => in_array($class, $this->excluded, true))
-            ->filter(fn (string $class) => class_exists($class) && is_subclass_of($class, Notification::class))
+            ->filter(fn (string $class) => class_exists($class) && $this->isOfType($class, $types))
+            ->reject(fn (string $class) => $this->isExcluded($class))
             ->sortBy(fn (string $class) => class_basename($class))
             ->values();
+    }
+
+    /**
+     * The base classes the viewer looks for, narrowed by the config toggles.
+     *
+     * @return list<class-string>
+     */
+    public function types(): array
+    {
+        $types = [];
+
+        if (config('notification-viewer.notifications', true)) {
+            $types[] = Notification::class;
+        }
+
+        if (config('notification-viewer.mailables', true)) {
+            $types[] = Mailable::class;
+        }
+
+        return $types;
+    }
+
+    /**
+     * @param  list<class-string>  $types
+     */
+    protected function isOfType(string $class, array $types): bool
+    {
+        foreach ($types as $type) {
+            if (is_subclass_of($class, $type)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Matches an exact class name, or a namespace that the class sits under.
+     */
+    public function isExcluded(string $class): bool
+    {
+        $class = ltrim($class, '\\');
+
+        foreach ([...$this->excluded, ...$this->configuredExclusions()] as $pattern) {
+            $pattern = trim($pattern, '\\');
+
+            if ($class === $pattern || Str::startsWith($class, $pattern.'\\')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function configuredExclusions(): array
+    {
+        /** @var list<string> $excluded */
+        $excluded = config('notification-viewer.exclude', []);
+
+        return $excluded;
     }
 
     public function contains(string $class): bool

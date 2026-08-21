@@ -11,11 +11,19 @@
 
     <div class="nv-shell">
         <aside class="nv-sidebar">
-            <div class="nv-search">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
-                </svg>
-                <input id="nv-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false">
+            <div class="nv-sidebar-header">
+                <div class="nv-search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+                    </svg>
+                    <input id="nv-search" type="search" placeholder="Search" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="nv-segmented nv-kind-filter" id="nv-kind-filter" role="group" aria-label="Type" hidden>
+                    <button type="button" data-kind="all">All</button>
+                    <button type="button" data-kind="notification">Notifications</button>
+                    <button type="button" data-kind="mailable">Mailables</button>
+                </div>
             </div>
             <nav class="nv-list" id="nv-list"></nav>
         </aside>
@@ -100,7 +108,7 @@
             @csrf
             <h2>Send test mail</h2>
             <input type="email" name="email" required placeholder="you@example.com" value="{{ $testEmail }}">
-            <input type="hidden" name="notification" id="nv-send-notification">
+            <input type="hidden" name="class" id="nv-send-class">
             <input type="hidden" name="variation" id="nv-send-variation">
             <input type="hidden" name="locale" id="nv-send-locale">
             <div id="nv-send-values"></div>
@@ -113,16 +121,17 @@
 
     <script>
         (function () {
-            const NOTIFICATIONS = @json($notifications);
+            const ENTRIES = @json($entries);
             const PREVIEW_URL = @json(route('notification-viewer.preview'));
             const VIEWPORTS = { desktop: '100%', tablet: '640px', mobile: '390px' };
 
             const state = {
-                selected: NOTIFICATIONS[0] || null,
+                selected: ENTRIES[0] || null,
                 variation: null,
                 pane: 'preview',
                 viewport: 'desktop',
                 search: '',
+                kind: 'all',
                 values: {},
             };
 
@@ -137,7 +146,7 @@
                 if (!state.selected) return 'about:blank';
 
                 const url = new URL(PREVIEW_URL, window.location.origin);
-                url.searchParams.set('notification', state.selected.class);
+                url.searchParams.set('class', state.selected.class);
                 if (state.variation) url.searchParams.set('variation', state.variation);
                 if (locale()) url.searchParams.set('locale', locale());
                 Object.entries(state.values).forEach(([name, value]) => {
@@ -154,19 +163,21 @@
             }
 
             function matches(item, term) {
-                return [item.label, item.class, item.path, item.subject]
+                return [item.label, item.class, item.path, item.subject, item.kind]
                     .filter(Boolean)
                     .some((value) => value.toLowerCase().includes(term));
             }
 
             function renderList() {
                 const term = state.search.trim().toLowerCase();
-                const visible = term ? NOTIFICATIONS.filter((item) => matches(item, term)) : NOTIFICATIONS;
+                const visible = ENTRIES
+                    .filter((item) => state.kind === 'all' || item.kind === state.kind)
+                    .filter((item) => !term || matches(item, term));
                 const list = el('nv-list');
                 list.innerHTML = '';
 
                 if (!visible.length) {
-                    list.innerHTML = '<p class="nv-empty">No notifications found.</p>';
+                    list.innerHTML = '<p class="nv-empty">Nothing found.</p>';
                     return;
                 }
 
@@ -189,9 +200,16 @@
                     button.className = 'nv-item';
                     button.setAttribute('aria-current', String(state.selected?.class === item.class));
 
-                    const title = document.createElement('span');
+                    const title = document.createElement('div');
                     title.className = 'nv-item-title';
                     title.textContent = item.label;
+
+                    if (item.kind === 'mailable') {
+                        const kind = document.createElement('span');
+                        kind.className = 'nv-kind';
+                        kind.textContent = 'Mailable';
+                        title.appendChild(kind);
+                    }
 
                     const subject = document.createElement('div');
                     subject.className = 'nv-item-subject';
@@ -295,6 +313,7 @@
                 meta.className = 'nv-table';
                 meta.append(
                     row('Class', item.class),
+                    row('Kind', item.kind === 'mailable' ? 'Mailable' : 'Notification'),
                     row('File', item.path),
                     row('Subject', item.subject),
                     row('From', item.from),
@@ -411,6 +430,21 @@
                 renderList();
             });
 
+            // The filter only earns its space when both kinds are actually present.
+            el('nv-kind-filter').hidden = new Set(ENTRIES.map((item) => item.kind)).size < 2;
+
+            document.querySelectorAll('[data-kind]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    state.kind = button.dataset.kind;
+                    document.querySelectorAll('[data-kind]').forEach((other) => {
+                        other.setAttribute('aria-pressed', String(other.dataset.kind === state.kind));
+                    });
+                    renderList();
+                });
+            });
+
+            document.querySelector('[data-kind="all"]').setAttribute('aria-pressed', 'true');
+
             variationSelect.addEventListener('change', () => {
                 state.variation = variationSelect.value;
                 refreshPreview();
@@ -452,7 +486,7 @@
             el('nv-send').addEventListener('click', () => {
                 if (!state.selected) return;
 
-                el('nv-send-notification').value = state.selected.class;
+                el('nv-send-class').value = state.selected.class;
                 el('nv-send-variation').value = state.variation || '';
                 el('nv-send-locale').value = locale();
 
@@ -474,7 +508,7 @@
             if (state.selected) {
                 select(state.selected);
             } else {
-                el('nv-list').innerHTML = '<p class="nv-empty">No notifications discovered.</p>';
+                el('nv-list').innerHTML = '<p class="nv-empty">Nothing discovered.</p>';
             }
 
             renderPane();

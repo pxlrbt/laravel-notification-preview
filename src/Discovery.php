@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace pxlrbt\LaravelNotificationViewer;
 
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -12,24 +11,30 @@ use ReflectionClass;
 use SplFileInfo;
 use Throwable;
 
-class DiscoveredNotifications
+class Discovery
 {
     /**
      * @param  array<string, string>  $paths  Absolute directory path => root namespace of that directory.
-     * @return Collection<int, class-string<Notification>>
+     * @param  list<class-string>  $types  Base classes a discovered class must extend.
+     * @return Collection<int, class-string>
      */
-    public function all(array $paths): Collection
+    public function all(array $paths, array $types): Collection
     {
+        if ($types === []) {
+            return Collection::make();
+        }
+
         return Collection::make($paths)
-            ->flatMap(fn (string $namespace, string $path) => $this->scan($path, $namespace))
+            ->flatMap(fn (string $namespace, string $path) => $this->scan($path, $namespace, $types))
             ->unique()
             ->values();
     }
 
     /**
-     * @return Collection<int, class-string<Notification>>
+     * @param  list<class-string>  $types
+     * @return Collection<int, class-string>
      */
-    protected function scan(string $path, string $namespace): Collection
+    protected function scan(string $path, string $namespace, array $types): Collection
     {
         if (! File::isDirectory($path)) {
             return Collection::make();
@@ -39,7 +44,7 @@ class DiscoveredNotifications
             ->filter(fn (SplFileInfo $file) => $file->getExtension() === 'php')
             ->map(fn (SplFileInfo $file) => $this->classFromFile($file, $path, $namespace))
             ->filter()
-            ->filter(fn (string $class) => $this->isConcreteNotification($class))
+            ->filter(fn (string $class) => $this->isConcreteSubclass($class, $types))
             ->values();
     }
 
@@ -58,16 +63,20 @@ class DiscoveredNotifications
     }
 
     /**
-     * @phpstan-assert-if-true class-string<Notification> $class
+     * @param  list<class-string>  $types
+     *
+     * @phpstan-assert-if-true class-string $class
      */
-    protected function isConcreteNotification(string $class): bool
+    protected function isConcreteSubclass(string $class, array $types): bool
     {
         try {
-            if (! is_subclass_of($class, Notification::class)) {
-                return false;
+            foreach ($types as $type) {
+                if (is_subclass_of($class, $type)) {
+                    return ! (new ReflectionClass($class))->isAbstract();
+                }
             }
 
-            return ! (new ReflectionClass($class))->isAbstract();
+            return false;
         } catch (Throwable) {
             return false;
         }

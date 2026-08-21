@@ -1,11 +1,11 @@
 # Laravel Notification Viewer
 
-Browse, preview and test-send every notification in your Laravel app.
+Browse, preview and test-send every notification and mailable in your Laravel app.
 
-The viewer scans your notification directories, builds each notification by
-resolving its constructor arguments from their types, and renders the mail it
-produces. Notifications whose arguments reflection cannot guess get their data
-from resolvers or variations you register.
+The viewer scans the configured directories, builds each class by resolving its
+constructor arguments from their types, and renders the mail it produces. Classes
+whose arguments reflection cannot guess get their data from resolvers or
+variations you register.
 
 ![Screenshot](.github/screenshot.png)
 
@@ -25,13 +25,22 @@ production environment**.
 // config/notification-viewer.php
 return [
     'enabled' => env('NOTIFICATION_VIEWER_ENABLED', true),
+
+    // The kinds of classes to look for. Turn either off to skip it entirely.
+    'notifications' => env('NOTIFICATION_VIEWER_NOTIFICATIONS', true),
+    'mailables' => env('NOTIFICATION_VIEWER_MAILABLES', true),
+
     'url_prefix' => env('NOTIFICATION_VIEWER_URL_PREFIX', 'dev/notifications'),
     'middleware' => ['web'],
 
     // Directory => the PSR-4 root namespace of that directory. Scanned recursively.
     'paths' => [
         app_path('Notifications') => 'App\\Notifications',
+        app_path('Mail') => 'App\\Mail',
     ],
+
+    // Class names and namespaces to hide.
+    'exclude' => [],
 
     // null falls back to the directories inside lang_path()
     'locales' => null,
@@ -40,9 +49,26 @@ return [
 ];
 ```
 
-Only concrete subclasses of `Illuminate\Notifications\Notification` are listed;
-abstract classes and everything else is skipped. That means you can point
-`paths` at a whole domain directory without filtering it yourself.
+Only concrete subclasses of `Illuminate\Notifications\Notification` and
+`Illuminate\Mail\Mailable` are listed; abstract classes and everything else are
+skipped. That means you can point `paths` at a whole domain directory without
+filtering it yourself.
+
+Mailables are handled the same way as notifications throughout — both styles
+(`envelope()`/`content()` and the older `build()`) report their subject, sender
+and template.
+
+### Hiding classes
+
+`exclude` takes fully qualified class names and namespaces. A namespace hides
+everything below it:
+
+```php
+'exclude' => [
+    App\Notifications\Internal\DebugPing::class,   // one class
+    'App\Notifications\Internal',                  // the whole namespace
+],
+```
 
 ## Argument resolution
 
@@ -140,7 +166,10 @@ NotificationViewer::group(OrderShipped::class, 'Orders');
 
 ```php
 NotificationViewer::register(SomePackage\Notifications\Welcome::class);
+
+// Same matching rules as the `exclude` config key.
 NotificationViewer::exclude(InternalDebugNotification::class);
+NotificationViewer::exclude('App\Notifications\Internal');
 ```
 
 ## Testing

@@ -7,8 +7,7 @@ namespace pxlrbt\LaravelNotificationViewer;
 use BackedEnum;
 use DateTimeInterface;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
+use Illuminate\Mail\Mailable;
 use ReflectionClass;
 use ReflectionParameter;
 use Throwable;
@@ -19,13 +18,14 @@ class NotificationInspector
     public function __construct(
         protected NotificationViewer $viewer,
         protected NotificationFactory $factory,
+        protected PreviewRenderer $renderer,
     ) {}
 
     /**
-     * Metadata for every discovered notification, used to render the viewer shell.
+     * Metadata for every discovered class, used to render the viewer shell.
      *
-     * ponytail: renders every notification once to read its subject line. Fine for
-     * a few dozen classes; move to a lazy per-row request if the index gets slow.
+     * ponytail: renders every entry once to read its subject line. Fine for a few
+     * dozen classes; move to a lazy per-row request if the index gets slow.
      *
      * @return list<array<string, mixed>>
      */
@@ -34,14 +34,14 @@ class NotificationInspector
         /** @var list<array<string, mixed>> */
         return $this->viewer->classes()
             ->map(fn (string $class) => $this->describe($class))
-            // Grouped notifications first, in group order, then the ungrouped rest.
+            // Grouped entries first, in group order, then the ungrouped rest.
             ->sortBy(fn (array $row) => ($row['group'] ?? "\u{FFFF}")."\u{0000}".$row['label'])
             ->values()
             ->all();
     }
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
@@ -52,6 +52,7 @@ class NotificationInspector
 
         $details = [
             'class' => $class,
+            'kind' => $reflection->isSubclassOf(Mailable::class) ? 'mailable' : 'notification',
             'label' => $this->viewer->labelFor($class) ?? $this->humanize(class_basename($class)),
             'group' => $this->viewer->groupFor($class),
             'path' => $this->relativePath($reflection->getFileName() ?: ''),
@@ -60,28 +61,21 @@ class NotificationInspector
             'params' => $variations === [] ? $this->params($class, $overrides) : [],
             'subject' => null,
             'from' => null,
-            'channels' => [],
             'view' => null,
+            'channels' => [],
             'error' => null,
         ];
 
         try {
-            $notification = $this->factory->make($class, $variation, $overrides);
-            $notifiable = $this->notifiableFor($class, $variation);
+            $rendered = $this->renderer->render(
+                $this->factory->make($class, $variation, $overrides),
+                $this->notifiableFor($class, $variation),
+            );
 
-            $details['channels'] = method_exists($notification, 'via')
-                ? (array) $notification->via($notifiable)
-                : [];
-
-            $mail = method_exists($notification, 'toMail')
-                ? $notification->toMail($notifiable)
-                : null;
-
-            if ($mail instanceof MailMessage) {
-                $details['subject'] = $mail->subject;
-                $details['from'] = $this->formatFrom($mail);
-                $details['view'] = $mail->markdown ?: (is_string($mail->view) ? $mail->view : null);
-            }
+            $details['subject'] = $rendered['subject'];
+            $details['from'] = $rendered['from'];
+            $details['view'] = $rendered['view'];
+            $details['channels'] = $rendered['channels'];
         } catch (Throwable $exception) {
             $details['error'] = $exception->getMessage();
         }
@@ -90,7 +84,7 @@ class NotificationInspector
     }
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      */
     public function notifiableFor(string $class, ?string $variation = null): object
     {
@@ -105,7 +99,7 @@ class NotificationInspector
     /**
      * Constructor parameters and whether the UI may edit them.
      *
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      * @return list<array<string, mixed>>
      */
@@ -119,6 +113,7 @@ class NotificationInspector
 
         return array_map(function (ReflectionParameter $parameter) use ($class, $overrides): array {
             $editable = $this->factory->isOverridable($parameter);
+            $value = $this->stringify($this->safeResolve($class, $parameter, $overrides));
 
             return [
                 'name' => $parameter->getName(),
@@ -126,14 +121,14 @@ class NotificationInspector
                 'editable' => $editable,
                 'input' => $this->factory->inputType($parameter),
                 'options' => $this->factory->enumOptions($parameter),
-                'value' => $editable ? $this->stringify($this->safeResolve($class, $parameter, $overrides)) : null,
-                'preview' => $editable ? null : $this->stringify($this->safeResolve($class, $parameter, $overrides)),
+                'value' => $editable ? $value : null,
+                'preview' => $editable ? null : $value,
             ];
         }, $constructor->getParameters());
     }
 
     /**
-     * @param  class-string<Notification>  $class
+     * @param  class-string  $class
      * @param  array<string, mixed>  $overrides
      */
     protected function safeResolve(string $class, ReflectionParameter $parameter, array $overrides): mixed
@@ -158,18 +153,6 @@ class NotificationInspector
             is_array($value) => 'array('.count($value).')',
             default => gettype($value),
         };
-    }
-
-    protected function formatFrom(MailMessage $mail): ?string
-    {
-        $address = $mail->from[0] ?? config('mail.from.address');
-        $name = $mail->from[1] ?? config('mail.from.name');
-
-        if (! is_string($address)) {
-            return null;
-        }
-
-        return is_string($name) && $name !== '' ? "{$name} <{$address}>" : $address;
     }
 
     protected function relativePath(string $path): string

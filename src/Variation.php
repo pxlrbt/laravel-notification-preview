@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace pxlrbt\LaravelNotificationViewer;
 
 use Closure;
+use Illuminate\Mail\Mailable;
 use Illuminate\Notifications\Notification;
 
 class Variation
@@ -31,7 +32,7 @@ class Variation
         return $this;
     }
 
-    public function resolve(): Notification
+    public function resolve(): Notification|Mailable
     {
         return ($this->factory)();
     }

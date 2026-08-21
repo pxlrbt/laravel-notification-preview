@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace pxlrbt\LaravelNotificationViewer\Facades;
 
 use Closure;
-use Illuminate\Notifications\Notification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 use pxlrbt\LaravelNotificationViewer\NotificationViewer as NotificationViewerManager;
@@ -19,7 +18,9 @@ use pxlrbt\LaravelNotificationViewer\Variation;
  * @method static NotificationViewerManager notifiable(Closure $factory)
  * @method static NotificationViewerManager register(string|list<string> $notifications)
  * @method static NotificationViewerManager exclude(string|list<string> $notifications)
- * @method static Collection<int, class-string<Notification>> classes()
+ * @method static bool isExcluded(string $class)
+ * @method static list<class-string> types()
+ * @method static Collection<int, class-string> classes()
  * @method static bool contains(string $class)
  * @method static list<string> locales()
  * @method static void flush()
