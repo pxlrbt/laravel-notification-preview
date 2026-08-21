@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications;
 
-use Closure;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use pxlrbt\LaravelNotificationPreview\Variant;
 
 class SelfDescribingNotification extends Notification
 {
     public function __construct(public string $tone) {}
 
     /**
-     * @return array<string, Closure>
+     * @return list<Variant>
      */
     public static function previewVariants(): array
     {
         return [
-            'Friendly' => fn () => new self('friendly'),
-            'Formal' => fn () => new self('formal'),
+            Variant::make('Friendly', fn () => new self('friendly')),
+            Variant::make('Formal', fn () => new self('formal')),
         ];
     }
 

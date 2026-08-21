@@ -77,7 +77,8 @@ driver strings and channel classes alike, so `smsapi` also covers an
 
 ### Authorization
 
-Everybody outside production may open the preview, until you say otherwise:
+By default there is no check: outside production, anybody who can reach the URL
+can open the preview. Narrow that down with an auth closure:
 
 ```php
 use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
@@ -161,19 +162,19 @@ state, a particular payload — register named variants. A variant returns the
 finished notification and skips argument resolution entirely:
 
 ```php
+use pxlrbt\LaravelNotificationPreview\Variant;
+
 NotificationPreview::variants(OrderCancelled::class, [
-    'By customer' => fn () => (new OrderCancelled($order))->setReason('customer'),
-    'By us' => fn () => (new OrderCancelled($order))->setReason('internal'),
+    Variant::make('By customer', fn () => (new OrderCancelled($order))->setReason('customer')),
+    Variant::make('By us', fn () => (new OrderCancelled($order))->setReason('internal')),
 ]);
 ```
 
 Variants can pin their own notifiable:
 
 ```php
-use pxlrbt\LaravelNotificationPreview\Variant;
-
 NotificationPreview::variants(OrderShipped::class, [
-    'To the buyer' => Variant::make('To the buyer', fn () => new OrderShipped($order))
+    Variant::make('To the buyer', fn () => new OrderShipped($order))
         ->notifiable(fn () => User::factory()->make(['id' => 2])),
 ]);
 ```
@@ -181,16 +182,18 @@ NotificationPreview::variants(OrderShipped::class, [
 ### Variants on the notification itself
 
 If you would rather keep the preview data next to the notification, add a static
-`previewVariants()` method. No interface to implement, no import needed:
+`previewVariants()` method. No interface to implement:
 
 ```php
+use pxlrbt\LaravelNotificationPreview\Variant;
+
 class OrderShipped extends Notification
 {
     public static function previewVariants(): array
     {
         return [
-            'Express' => fn () => new self(Order::factory()->express()->make()),
-            'Standard' => fn () => new self(Order::factory()->make()),
+            Variant::make('Express', fn () => new self(Order::factory()->express()->make())),
+            Variant::make('Standard', fn () => new self(Order::factory()->make())),
         ];
     }
 }

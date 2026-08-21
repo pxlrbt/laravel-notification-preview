@@ -15,7 +15,7 @@ use pxlrbt\LaravelNotificationPreview\Variant;
  * @method static NotificationPreviewManager auth(Closure $callback)
  * @method static bool allows(?Request $request = null)
  * @method static NotificationPreviewManager resolve(string $key, Closure $resolver)
- * @method static NotificationPreviewManager variants(string $notification, array<string, Closure|Variant> $variants)
+ * @method static NotificationPreviewManager variants(string $notification, list<Variant> $variants)
  * @method static NotificationPreviewManager group(string $notification, string $group)
  * @method static NotificationPreviewManager label(string $notification, string $label)
  * @method static NotificationPreviewManager notifiable(Closure $factory)

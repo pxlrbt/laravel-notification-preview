@@ -83,19 +83,17 @@ class NotificationPreview
     }
 
     /**
-     * Registers named variants for a notification. Each closure must return a
-     * fully constructed notification, which lets you call setters that the
-     * constructor does not cover.
+     * Registers named variants for a notification. Each variant's factory must
+     * return a fully constructed notification, which lets you call setters that
+     * the constructor does not cover.
      *
-     * @param  array<string, Closure|Variant>  $variants
+     * @param  list<Variant>  $variants
      * @param  class-string  $notification
      */
     public function variants(string $notification, array $variants): static
     {
-        foreach ($variants as $label => $variant) {
-            $this->variants[$notification][$label] = $variant instanceof Variant
-                ? $variant
-                : Variant::make($label, $variant);
+        foreach ($variants as $variant) {
+            $this->variants[$notification][$variant->label] = $variant;
         }
 
         return $this;
@@ -110,13 +108,11 @@ class NotificationPreview
         $registered = $this->variants[$notification] ?? [];
 
         if (method_exists($notification, 'previewVariants')) {
-            /** @var array<string, Closure|Variant> $declared */
+            /** @var list<Variant> $declared */
             $declared = $notification::previewVariants();
 
-            foreach ($declared as $label => $variant) {
-                $registered[$label] ??= $variant instanceof Variant
-                    ? $variant
-                    : Variant::make($label, $variant);
+            foreach ($declared as $variant) {
+                $registered[$variant->label] ??= $variant;
             }
         }
 

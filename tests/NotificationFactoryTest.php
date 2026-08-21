@@ -14,6 +14,7 @@ use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\ScalarNotific
 use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\SelfDescribingNotification;
 use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\Notifications\UntypedNotification;
 use pxlrbt\LaravelNotificationPreview\Tests\Fixtures\StatusEnum;
+use pxlrbt\LaravelNotificationPreview\Variant;
 
 beforeEach(fn () => $this->factory = app(NotificationFactory::class));
 
@@ -122,9 +123,9 @@ it('ignores overrides for parameters that cannot round-trip through a query stri
 
 it('short circuits reflection when a variant is registered', function () {
     NotificationPreview::variants(ScalarNotification::class, [
-        'Custom' => fn () => new ScalarNotification(
+        Variant::make('Custom', fn () => new ScalarNotification(
             'Registered', '', '', '', '', 1, 1.0, false, [], StatusEnum::Shipped, Carbon::now(),
-        ),
+        )),
     ]);
 
     expect($this->factory->make(ScalarNotification::class, 'Custom'))->customerName->toBe('Registered');
@@ -140,7 +141,7 @@ it('picks up variants declared on the notification itself', function () {
 
 it('lets registered variants override ones declared on the notification', function () {
     NotificationPreview::variants(SelfDescribingNotification::class, [
-        'Formal' => fn () => new SelfDescribingNotification('registered'),
+        Variant::make('Formal', fn () => new SelfDescribingNotification('registered')),
     ]);
 
     expect($this->factory->make(SelfDescribingNotification::class, 'Formal'))->tone->toBe('registered');
