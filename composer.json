@@ -1,0 +1,58 @@
+{
+    "name": "pxlrbt/laravel-notification-viewer",
+    "description": "Browse, preview and test-send every Laravel notification in your app.",
+    "keywords": ["laravel", "notifications", "mail", "preview", "developer-tools"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Dennis Koch",
+            "email": "info@pxlrbt.de",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2",
+        "illuminate/contracts": "^11.0|^12.0",
+        "spatie/laravel-package-tools": "^1.16"
+    },
+    "require-dev": {
+        "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^10.0",
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "pxlrbt\\LaravelNotificationViewer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "pxlrbt\\LaravelNotificationViewer\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "format": "XDEBUG_MODE=off vendor/bin/pint",
+        "analyse": "XDEBUG_MODE=off vendor/bin/phpstan --memory-limit=512M",
+        "test": "XDEBUG_MODE=off vendor/bin/pest"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        },
+        "sort-packages": true
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "pxlrbt\\LaravelNotificationViewer\\NotificationViewerServiceProvider"
+            ],
+            "aliases": {
+                "NotificationViewer": "pxlrbt\\LaravelNotificationViewer\\Facades\\NotificationViewer"
+            }
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
