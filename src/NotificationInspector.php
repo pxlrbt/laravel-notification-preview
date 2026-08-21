@@ -48,13 +48,14 @@ class NotificationInspector
     public function describe(string $class, ?string $variant = null, array $overrides = []): array
     {
         $reflection = new ReflectionClass($class);
-        $variants = $this->registry->variantsFor($class);
+        $preview = $this->registry->for($class);
+        $variants = $preview->resolveVariants();
 
         $details = [
             'class' => $class,
             'kind' => $reflection->isSubclassOf(Mailable::class) ? 'mailable' : 'notification',
-            'label' => $this->registry->labelFor($class) ?? $this->humanize(class_basename($class)),
-            'group' => $this->registry->groupFor($class),
+            'label' => $preview->resolveLabel(),
+            'group' => $preview->resolveGroup(),
             'path' => $this->relativePath($reflection->getFileName() ?: ''),
             'variants' => array_values(array_map(fn (Variant $variant) => [
                 'value' => $variant->key,
@@ -121,7 +122,7 @@ class NotificationInspector
      */
     public function notifiableFor(string $class, ?string $variant = null): object
     {
-        $variants = $this->registry->variantsFor($class);
+        $variants = $this->registry->for($class)->resolveVariants();
         $selected = $variant !== null
             ? ($variants[$variant] ?? null)
             : ($variants === [] ? null : reset($variants));
@@ -191,10 +192,5 @@ class NotificationInspector
     protected function relativePath(string $path): string
     {
         return ltrim(str_replace(base_path(), '', $path), DIRECTORY_SEPARATOR);
-    }
-
-    protected function humanize(string $name): string
-    {
-        return trim(preg_replace('/(?<!^)[A-Z]/', ' $0', $name) ?? $name);
     }
 }

@@ -32,8 +32,9 @@ it('captures render failures instead of throwing', function () {
 });
 
 it('uses registered labels and groups', function () {
-    NotificationPreview::label(DeepNotification::class, 'Custom label');
-    NotificationPreview::group(DeepNotification::class, 'Custom group');
+    NotificationPreview::for(DeepNotification::class)
+        ->label('Custom label')
+        ->group('Custom group');
 
     expect($this->inspector->describe(DeepNotification::class))
         ->label->toBe('Custom label')
@@ -53,7 +54,7 @@ it('overrides the derived label, deferring a closure until it renders', function
     // Arrange
     app()->setLocale('de');
 
-    NotificationPreview::variants(DeepNotification::class, [
+    NotificationPreview::for(DeepNotification::class)->variants([
         Variant::make('plain-string', fn () => new DeepNotification)->label('Explicit label'),
         Variant::make('deferred', fn () => new DeepNotification)->label(fn () => 'Locale: '.app()->getLocale()),
     ]);
@@ -66,6 +67,35 @@ it('overrides the derived label, deferring a closure until it renders', function
         ['value' => 'plain-string', 'label' => 'Explicit label'],
         ['value' => 'deferred', 'label' => 'Locale: de'],
     ]);
+});
+
+it('reads the label a notification declares for itself', function () {
+    // Act & Assert
+    expect($this->inspector->describe(SelfDescribingNotification::class))
+        ->label->toBe('Tone examples');
+});
+
+it('merges registered configuration over the declared one per property', function () {
+    // Arrange
+    NotificationPreview::for(SelfDescribingNotification::class)->group('Fixtures');
+
+    // Act
+    $details = $this->inspector->describe(SelfDescribingNotification::class);
+
+    // Assert
+    expect($details)
+        ->label->toBe('Tone examples')
+        ->group->toBe('Fixtures')
+        ->and(array_column($details['variants'], 'value'))->toBe(['friendly', 'formal']);
+});
+
+it('lets a registered label win over the declared one', function () {
+    // Arrange
+    NotificationPreview::for(SelfDescribingNotification::class)->label('Overridden');
+
+    // Act & Assert
+    expect($this->inspector->describe(SelfDescribingNotification::class))
+        ->label->toBe('Overridden');
 });
 
 it('marks scalar parameters editable and objects read only', function () {
@@ -90,7 +120,7 @@ it('offers enum cases as select options', function () {
 });
 
 it('sorts grouped notifications ahead of ungrouped ones', function () {
-    NotificationPreview::group(ScalarNotification::class, 'Billing');
+    NotificationPreview::for(ScalarNotification::class)->group('Billing');
 
     $groups = array_column($this->inspector->all(), 'group');
 

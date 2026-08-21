@@ -122,7 +122,7 @@ it('ignores overrides for parameters that cannot round-trip through a query stri
 });
 
 it('short circuits reflection when a variant is registered', function () {
-    NotificationPreview::variants(ScalarNotification::class, [
+    NotificationPreview::for(ScalarNotification::class)->variants([
         Variant::make('custom', fn () => new ScalarNotification(
             'Registered', '', '', '', '', 1, 1.0, false, [], StatusEnum::Shipped, Carbon::now(),
         )),
@@ -140,7 +140,7 @@ it('picks up variants declared on the notification itself', function () {
 });
 
 it('lets registered variants override ones declared on the notification', function () {
-    NotificationPreview::variants(SelfDescribingNotification::class, [
+    NotificationPreview::for(SelfDescribingNotification::class)->variants([
         Variant::make('formal', fn () => new SelfDescribingNotification('registered')),
     ]);
 

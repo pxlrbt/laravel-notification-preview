@@ -33,7 +33,7 @@ class NotificationFactory
      */
     public function make(string $class, ?string $variant = null, array $overrides = []): Notification|Mailable
     {
-        $variants = $this->registry->variantsFor($class);
+        $variants = $this->registry->for($class)->resolveVariants();
 
         if ($variant !== null && isset($variants[$variant])) {
             return $variants[$variant]->resolve();

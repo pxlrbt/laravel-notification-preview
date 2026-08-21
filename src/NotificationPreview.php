@@ -18,14 +18,8 @@ class NotificationPreview
     /** @var array<string, Closure> */
     protected array $resolvers = [];
 
-    /** @var array<class-string, array<string, Variant>> */
-    protected array $variants = [];
-
-    /** @var array<class-string, string> */
-    protected array $groups = [];
-
-    /** @var array<class-string, string> */
-    protected array $labels = [];
+    /** @var array<class-string, Preview> */
+    protected array $configs = [];
 
     /** @var list<class-string> */
     protected array $registered = [];
@@ -83,76 +77,23 @@ class NotificationPreview
     }
 
     /**
-     * Registers named variants for a notification. Each variant's factory must
-     * return a fully constructed notification, which lets you call setters that
-     * the constructor does not cover.
+     * Configuration for a single notification: its label, its group and its
+     * variants. A static `preview()` on the notification itself is applied
+     * first, so whatever is registered here wins.
      *
-     * @param  list<Variant>  $variants
      * @param  class-string  $notification
      */
-    public function variants(string $notification, array $variants): static
+    public function for(string $notification): Preview
     {
-        foreach ($variants as $variant) {
-            $this->variants[$notification][$variant->key] = $variant;
-        }
+        if (! isset($this->configs[$notification])) {
+            $this->configs[$notification] = new Preview($notification);
 
-        return $this;
-    }
-
-    /**
-     * @param  class-string  $notification
-     * @return array<string, Variant>
-     */
-    public function variantsFor(string $notification): array
-    {
-        $registered = $this->variants[$notification] ?? [];
-
-        if (method_exists($notification, 'previewVariants')) {
-            /** @var list<Variant> $declared */
-            $declared = $notification::previewVariants();
-
-            foreach ($declared as $variant) {
-                $registered[$variant->key] ??= $variant;
+            if (method_exists($notification, 'preview')) {
+                $notification::preview($this->configs[$notification]);
             }
         }
 
-        return $registered;
-    }
-
-    /**
-     * @param  class-string  $notification
-     */
-    public function group(string $notification, string $group): static
-    {
-        $this->groups[$notification] = $group;
-
-        return $this;
-    }
-
-    /**
-     * @param  class-string  $notification
-     */
-    public function groupFor(string $notification): ?string
-    {
-        return $this->groups[$notification] ?? null;
-    }
-
-    /**
-     * @param  class-string  $notification
-     */
-    public function label(string $notification, string $label): static
-    {
-        $this->labels[$notification] = $label;
-
-        return $this;
-    }
-
-    /**
-     * @param  class-string  $notification
-     */
-    public function labelFor(string $notification): ?string
-    {
-        return $this->labels[$notification] ?? null;
+        return $this->configs[$notification];
     }
 
     /**
@@ -337,9 +278,7 @@ class NotificationPreview
     public function flush(): void
     {
         $this->resolvers = [];
-        $this->variants = [];
-        $this->groups = [];
-        $this->labels = [];
+        $this->configs = [];
         $this->registered = [];
         $this->excluded = [];
         $this->notifiableFactory = null;

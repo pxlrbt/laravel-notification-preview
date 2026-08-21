@@ -155,68 +155,78 @@ The notifiable that notifications are rendered against works the same way:
 NotificationPreview::notifiable(fn () => User::factory()->make(['id' => 1]));
 ```
 
-### Variants
+### Per-notification configuration
 
-When a notification needs more than constructor arguments — setters, a specific
-state, a particular payload — register named variants. A variant returns the
-finished notification and skips argument resolution entirely:
+`for()` returns one object holding everything the viewer shows about a single
+notification — its label, its group and its variants:
 
 ```php
+use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
 use pxlrbt\LaravelNotificationPreview\Variant;
 
-NotificationPreview::variants(OrderCancelled::class, [
-    Variant::make('by-customer', fn () => (new OrderCancelled($order))->setReason('customer')),
-    Variant::make('by-us', fn () => (new OrderCancelled($order))->setReason('internal')),
-]);
+NotificationPreview::for(OrderCancelled::class)
+    ->label('Cancellation')
+    ->group('Orders')
+    ->variants([
+        Variant::make('by-customer', fn () => (new OrderCancelled($order))->setReason('customer')),
+        Variant::make('by-us', fn () => (new OrderCancelled($order))->setReason('internal')),
+    ]);
 ```
 
-The first argument is the key the preview identifies the variant by; its label is
-derived from it, so `by-customer` shows as "By Customer". Set your own with
-`label()`, as a string or as a closure that defers a translation until the
-variant is rendered:
+Variants are for notifications that need more than constructor arguments —
+setters, a specific state, a particular payload. A variant returns the finished
+notification and skips argument resolution entirely.
+
+Labels are derived when you do not set them: from the class name for the
+notification, from its key for a variant, so `by-customer` shows as
+"By Customer". `label()` and `group()` both take a string or a closure, and a
+closure defers a translation until the preview is rendered rather than resolving
+it while your service provider boots:
 
 ```php
-Variant::make('by-customer', $factory)->label('Cancelled by the customer');
+NotificationPreview::for(OrderCancelled::class)
+    ->label(fn () => __('notifications.order_cancelled'))
+    ->group(fn () => __('notifications.groups.orders'));
+
 Variant::make('by-customer', $factory)->label(fn () => __('variants.by_customer'));
 ```
 
 Variants can pin their own notifiable:
 
 ```php
-NotificationPreview::variants(OrderShipped::class, [
+NotificationPreview::for(OrderShipped::class)->variants([
     Variant::make('to-the-buyer', fn () => new OrderShipped($order))
         ->notifiable(fn () => User::factory()->make(['id' => 2])),
 ]);
 ```
 
-### Variants on the notification itself
+### Configuration on the notification itself
 
-If you would rather keep the preview data next to the notification, add a static
-`previewVariants()` method. No interface to implement:
+To keep the preview data next to the notification, add a static `preview()`
+method. Same object, no interface to implement:
 
 ```php
+use pxlrbt\LaravelNotificationPreview\Preview;
 use pxlrbt\LaravelNotificationPreview\Variant;
 
 class OrderShipped extends Notification
 {
-    public static function previewVariants(): array
+    public static function preview(Preview $preview): void
     {
-        return [
-            Variant::make('express', fn () => new self(Order::factory()->express()->make())),
-            Variant::make('standard', fn () => new self(Order::factory()->make())),
-        ];
+        $preview
+            ->label('Shipping confirmation')
+            ->group('Orders')
+            ->variants([
+                Variant::make('express', fn () => new self(Order::factory()->express()->make())),
+                Variant::make('standard', fn () => new self(Order::factory()->make())),
+            ]);
     }
 }
 ```
 
-Variants registered through the facade take precedence over these.
-
-### Labels and groups
-
-```php
-NotificationPreview::label(OrderShipped::class, 'Shipping confirmation');
-NotificationPreview::group(OrderShipped::class, 'Orders');
-```
+Both sources merge, and anything registered through `for()` wins — per property,
+and per variant key. A class that declares a label and a service provider that
+sets only a group end up with both.
 
 ### Registering and excluding classes
 
