@@ -103,10 +103,30 @@ everything below it:
 ],
 ```
 
-## Supplying your own data
+## Argument resolution
 
-Constructor arguments are resolved from their types, so most classes need no
-setup at all. Register the rest.
+For each constructor parameter the preview tries these sources, in order, and
+takes the first one that answers:
+
+| # | Source | Applies to |
+| --- | --- | --- |
+| 1 | A value edited in the UI | Scalars, enums and dates |
+| 2 | A registered resolver | The parameter reference first, then its type |
+| 3 | The parameter's default value | Anything with a default |
+| 4 | A value derived from the type | See below |
+| 5 | A faked scalar derived from the parameter name | `$email`, `$url`, `$name` and `$*Id` get plausible values, everything else gets `'Sample text'` |
+
+Step 4 derives from the type itself:
+
+| Type | Value |
+| --- | --- |
+| Enum | Its first case |
+| Date | `now()` |
+| Model | `Model::factory()->make()`, falling back to `Model::query()->first()` |
+| Collection | Empty |
+| Anything else | Resolved from the container |
+
+## Supplying your own data
 
 ### Resolvers
 
@@ -137,7 +157,8 @@ NotificationPreview::notifiable(fn () => User::factory()->make(['id' => 1]));
 ### Variants
 
 When a notification needs more than constructor arguments — setters, a specific
-state, a particular payload — register named variants:
+state, a particular payload — register named variants. A variant returns the
+finished notification and skips argument resolution entirely:
 
 ```php
 NotificationPreview::variants(OrderCancelled::class, [
@@ -159,7 +180,7 @@ NotificationPreview::variants(OrderShipped::class, [
 
 ### Variants on the notification itself
 
-To keep the preview data next to the notification, add a static
+If you would rather keep the preview data next to the notification, add a static
 `previewVariants()` method. No interface to implement, no import needed:
 
 ```php
