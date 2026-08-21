@@ -63,6 +63,7 @@ class NotificationInspector
             'from' => null,
             'view' => null,
             'channels' => [],
+            'formats' => [],
             'error' => null,
         ];
 
@@ -76,11 +77,40 @@ class NotificationInspector
             $details['from'] = $rendered['from'];
             $details['view'] = $rendered['view'];
             $details['channels'] = $rendered['channels'];
+            $details['formats'] = $this->formats($rendered['channels']);
         } catch (Throwable $exception) {
             $details['error'] = $exception->getMessage();
         }
 
         return $details;
+    }
+
+    /**
+     * The bodies the preview can show: the mail message as HTML and text, plus a
+     * JSON payload per other channel the notification declares and the config
+     * opted in.
+     *
+     * @param  list<string>  $channels
+     * @return list<array{value: string, label: string}>
+     */
+    protected function formats(array $channels): array
+    {
+        $enabled = array_values(array_filter($channels, fn (string $channel) => $this->renderer->isEnabled($channel)));
+
+        $others = array_values(array_filter(
+            $enabled,
+            fn (string $channel) => $this->renderer->channelName($channel) !== 'Mail',
+        ));
+
+        $mail = count($others) < count($enabled);
+
+        return [
+            ...$mail ? [['value' => 'html', 'label' => 'HTML'], ['value' => 'text', 'label' => 'Text']] : [],
+            ...array_map(fn (string $channel) => [
+                'value' => $channel,
+                'label' => $this->renderer->channelName($channel),
+            ], $others),
+        ];
     }
 
     /**

@@ -75,10 +75,7 @@
             </div>
 
             <div class="nv-pane" id="nv-pane-preview">
-                <div class="nv-segmented nv-format-floating" id="nv-format" role="group" aria-label="Body">
-                    <button type="button" data-format="html">HTML</button>
-                    <button type="button" data-format="text">Text</button>
-                </div>
+                <div class="nv-segmented nv-format-floating" id="nv-format" role="group" aria-label="Body"></div>
 
                 <button type="button" class="nv-button nv-copy-floating" id="nv-copy" data-tooltip="Copy the rendered body">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -135,6 +132,8 @@
                 },
             };
 
+            const COPY_LABELS = { html: 'Copy HTML', text: 'Copy text' };
+
             const state = {
                 selected: ENTRIES[0] || null,
                 variant: null,
@@ -159,7 +158,7 @@
                 const url = new URL(PREVIEW_URL, window.location.origin);
                 url.searchParams.set('class', state.selected.class);
                 if (state.variant) url.searchParams.set('variant', state.variant);
-                if (state.format === 'text') url.searchParams.set('format', 'text');
+                if (state.format !== 'html') url.searchParams.set('format', state.format);
                 if (locale()) url.searchParams.set('locale', locale());
                 Object.entries(state.values).forEach(([name, value]) => {
                     if (value !== null && value !== undefined) {
@@ -424,7 +423,7 @@
                      * Plain text starts hard against the top-left corner, where the
                      * floating controls sit. HTML mails keep their own exact layout.
                      */
-                    doc.body.style.padding = state.format === 'text' ? '54px 16px 16px' : '';
+                    doc.body.style.padding = state.format === 'html' ? '' : '54px 16px 16px';
                 } catch (error) {
                     color = '';
                 }
@@ -435,6 +434,18 @@
 
             frame.addEventListener('load', matchPreviewBackground);
 
+            function renderFormats() {
+                const formats = state.selected ? state.selected.formats : [];
+                const control = el('nv-format');
+
+                // A lone body has nothing to switch between.
+                control.hidden = formats.length < 2;
+                control.innerHTML = formats
+                    .map((format) => `<button type="button" data-format="${format.value}"` +
+                        ` aria-pressed="${format.value === state.format}">${format.label}</button>`)
+                    .join('');
+            }
+
             function renderPane() {
                 document.querySelectorAll('[data-pane]').forEach((button) => {
                     button.setAttribute('aria-pressed', String(button.dataset.pane === state.pane));
@@ -442,11 +453,7 @@
                 el('nv-pane-preview').hidden = state.pane !== 'preview';
                 el('nv-pane-details').hidden = state.pane !== 'details';
 
-                document.querySelectorAll('[data-format]').forEach((button) => {
-                    button.setAttribute('aria-pressed', String(button.dataset.format === state.format));
-                });
-                el('nv-copy').querySelector('span').textContent =
-                    state.format === 'text' ? 'Copy text' : 'Copy HTML';
+                el('nv-copy').querySelector('span').textContent = COPY_LABELS[state.format] || 'Copy JSON';
 
                 document.querySelectorAll('[data-viewport]').forEach((button) => {
                     button.setAttribute('aria-pressed', String(button.dataset.viewport === state.viewport));
@@ -457,7 +464,10 @@
             function select(item) {
                 state.selected = item;
                 state.variant = item.variants[0] || null;
+                state.format = (item.formats[0] || {}).value || 'html';
                 state.values = {};
+                renderFormats();
+                renderPane();
                 renderList();
                 renderVariants();
                 renderEnvelope();
@@ -506,12 +516,14 @@
                 });
             });
 
-            document.querySelectorAll('[data-format]').forEach((button) => {
-                button.addEventListener('click', () => {
-                    state.format = button.dataset.format;
-                    renderPane();
-                    refreshPreview();
-                });
+            el('nv-format').addEventListener('click', (event) => {
+                const button = event.target.closest('[data-format]');
+                if (!button) return;
+
+                state.format = button.dataset.format;
+                renderFormats();
+                renderPane();
+                refreshPreview();
             });
 
             el('nv-copy').addEventListener('click', async () => {
@@ -601,6 +613,7 @@
                 el('nv-list').innerHTML = '<p class="nv-empty">Nothing discovered.</p>';
             }
 
+            renderFormats();
             renderPane();
         })();
     </script>

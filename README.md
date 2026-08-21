@@ -66,6 +66,22 @@ alternative the mail channel would send: a `->text()` view when there is one,
 otherwise the markdown template rendered through the text components. Messages
 built from a single HTML view have no text part and say so.
 
+### Other channels
+
+Mail is the only channel rendered as a message. Every other one is shown as the
+JSON payload it would hand its provider — a payload dump, not a Slack or SMS
+mock-up. Opt them in through the config:
+
+```php
+'channels' => ['mail', 'database', 'smsapi'],
+```
+
+A notification then gains one tab per channel its `via()` declares and the config
+lists. Names match both driver strings and channel classes, so `smsapi` also
+covers an `SmsapiChannel::class` in `via()`. The payload comes from the matching
+`to{Channel}()` method, with `database` falling back to `toArray()` the way
+Laravel's own channel does.
+
 ### Who may open it
 
 The viewer's routes are never registered in the production environment. Everywhere

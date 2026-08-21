@@ -16,6 +16,14 @@ return [
     'notifications' => env('NOTIFICATION_VIEWER_NOTIFICATIONS', true),
     'mailables' => env('NOTIFICATION_VIEWER_MAILABLES', true),
 
+    /*
+     * The channels the preview can show. Mail is rendered as HTML and text;
+     * every other channel is dumped as the JSON payload it hands its provider.
+     * Names match both driver strings and channel classes, so 'smsapi' also
+     * covers an SmsapiChannel::class in via().
+     */
+    'channels' => ['mail'],
+
     'url_prefix' => env('NOTIFICATION_VIEWER_URL_PREFIX', 'dev/notifications'),
 
     'middleware' => ['web'],

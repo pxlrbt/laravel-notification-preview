@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace pxlrbt\LaravelNotificationViewer;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Markdown;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Str;
+use JsonSerializable;
 use RuntimeException;
 
 class PreviewRenderer
@@ -49,16 +52,111 @@ class PreviewRenderer
     {
         $mail = $this->mailMessage($notification, $notifiable);
 
-        /** @var list<string> $channels */
-        $channels = method_exists($notification, 'via') ? array_values((array) $notification->via($notifiable)) : [];
-
         return [
             'html' => (string) $mail->render(),
             'subject' => $this->nullIfBlank($mail->subject),
             'from' => $this->address($mail->from[0] ?? null, $mail->from[1] ?? null),
             'view' => $this->nullIfBlank($mail->markdown) ?? $this->nullIfBlank(is_string($mail->view) ? $mail->view : null),
-            'channels' => $channels,
+            'channels' => $this->channels($notification, $notifiable),
         ];
+    }
+
+    /**
+     * The channels a notification declares.
+     *
+     * @return list<string>
+     */
+    public function channels(object $previewable, object $notifiable): array
+    {
+        if ($previewable instanceof Mailable || ! method_exists($previewable, 'via')) {
+            return ['mail'];
+        }
+
+        /** @var list<string> */
+        return array_values(array_filter((array) $previewable->via($notifiable), is_string(...)));
+    }
+
+    /**
+     * The payload a non-mail channel would hand to its provider, as JSON. Null
+     * when the channel is not configured, not declared, or has no method.
+     *
+     * ponytail: a payload dump, not a provider-faithful render. Reproducing Slack
+     * blocks or SMS segmenting means an adapter per provider, forever out of date.
+     */
+    public function channel(object $previewable, object $notifiable, string $channel): ?string
+    {
+        if (! $this->isEnabled($channel) || ! in_array($channel, $this->channels($previewable, $notifiable), true)) {
+            return null;
+        }
+
+        $method = $this->channelMethod($previewable, $channel);
+
+        if ($method === null) {
+            return null;
+        }
+
+        $json = json_encode(
+            $this->normalize($previewable->{$method}($notifiable)),
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE,
+        );
+
+        return $json === false ? null : $json;
+    }
+
+    /**
+     * Whether the config opted this channel in. Compared by name, so a config
+     * entry of `smsapi` also matches a `SmsapiChannel::class` in via().
+     */
+    public function isEnabled(string $channel): bool
+    {
+        /** @var list<string> $enabled */
+        $enabled = config('notification-viewer.channels', ['mail']);
+
+        return in_array(
+            Str::lower($this->channelName($channel)),
+            array_map(fn (string $name) => Str::lower($this->channelName($name)), $enabled),
+            true,
+        );
+    }
+
+    /**
+     * The name Laravel's `to{Channel}()` convention builds its method from, for
+     * both driver strings (`slack`) and channel classes (`SmsapiChannel::class`).
+     */
+    public function channelName(string $channel): string
+    {
+        return class_exists($channel)
+            ? Str::before(class_basename($channel), 'Channel')
+            : Str::studly($channel);
+    }
+
+    protected function channelMethod(object $previewable, string $channel): ?string
+    {
+        $names = [$this->channelName($channel)];
+
+        // The database channel is the one that falls back to toArray().
+        if ($names[0] === 'Database') {
+            $names[] = 'Array';
+        }
+
+        foreach ($names as $name) {
+            if (method_exists($previewable, 'to'.$name)) {
+                return 'to'.$name;
+            }
+        }
+
+        return null;
+    }
+
+    protected function normalize(mixed $payload): mixed
+    {
+        return match (true) {
+            $payload instanceof Arrayable => $payload->toArray(),
+            $payload instanceof JsonSerializable => $payload->jsonSerialize(),
+            is_object($payload) && method_exists($payload, 'toArray') => $payload->toArray(),
+            is_object($payload) => get_object_vars($payload),
+            default => $payload,
+        };
     }
 
     /**

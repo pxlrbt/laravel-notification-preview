@@ -42,13 +42,11 @@ class NotificationViewerController extends Controller
     public function preview(Request $request): Response
     {
         $class = $this->validatedClass($request);
-        $asText = $request->input('format') === 'text';
+        $format = $request->string('format')->toString();
 
         try {
-            if ($asText) {
-                $text = $this->buildText($request, $class);
-
-                return response($text ?? 'This message has no plain-text part.')
+            if ($format !== '' && $format !== 'html') {
+                return response($this->buildBody($request, $class, $format))
                     ->header('Content-Type', 'text/plain; charset=UTF-8');
             }
 
@@ -100,13 +98,21 @@ class NotificationViewerController extends Controller
     }
 
     /**
+     * Any body other than the rendered HTML: the plain-text alternative, or the
+     * JSON payload of one of the notification's other channels.
+     *
      * @param  class-string  $class
      */
-    protected function buildText(Request $request, string $class): ?string
+    protected function buildBody(Request $request, string $class, string $format): string
     {
         [$previewable, $notifiable] = $this->resolve($request, $class);
 
-        return $this->renderer->text($previewable, $notifiable);
+        if ($format === 'text') {
+            return $this->renderer->text($previewable, $notifiable) ?? 'This message has no plain-text part.';
+        }
+
+        return $this->renderer->channel($previewable, $notifiable, $format)
+            ?? 'This notification has no '.$this->renderer->channelName($format).' payload.';
     }
 
     /**
