@@ -2,19 +2,12 @@
 
 Browse, preview and test-send every notification and mailable in your Laravel app.
 
-The preview scans the configured directories, builds each class by resolving its
-constructor arguments from their types, and renders the mail it produces. Classes
-whose arguments reflection cannot guess get their data from resolvers or
-variants you register.
-
 ![Screenshot](.github/screenshot.png)
 
 ## Features
 
-- Discovers every notification and mailable in the directories you point it at,
-  reading their namespaces from Composer's PSR-4 map.
-- Builds each class by resolving its constructor arguments from their types, with
-  resolvers and named variants for the ones reflection cannot guess.
+- Discovers every notification and mailable in the directories you point it at.
+- Builds each one for you; supply your own data with resolvers and named variants.
 - Renders the HTML and the plain-text side of a mail, at desktop, tablet and
   mobile widths.
 - Shows every other channel as the JSON payload it would hand its provider.
@@ -30,8 +23,8 @@ composer require pxlrbt/laravel-notification-preview --dev
 php artisan vendor:publish --tag=notification-preview-config
 ```
 
-The preview registers its routes automatically and is **always disabled in the
-production environment**.
+The routes register themselves and are **always disabled in the production
+environment**. Open the preview at `/dev/notifications`.
 
 ## Configuration
 
@@ -63,43 +56,28 @@ return [
 ];
 ```
 
-The namespace of each directory is read from Composer's PSR-4 map, so it never
-has to be repeated here. Directories that map to nothing are skipped.
+`paths` takes directories only — namespaces come from Composer's PSR-4 map. Point
+it at a whole domain directory if you like; abstract classes and anything that is
+neither a notification nor a mailable are skipped.
 
-Only concrete subclasses of `Illuminate\Notifications\Notification` and
-`Illuminate\Mail\Mailable` are listed; abstract classes and everything else are
-skipped. That means you can point `paths` at a whole domain directory without
-filtering it yourself.
-
-Mailables are handled the same way as notifications throughout — both styles
-(`envelope()`/`content()` and the older `build()`) report their subject, sender
-and template.
-
-The preview has an HTML/Text switch. The text side renders the plain-text
-alternative the mail channel would send: a `->text()` view when there is one,
-otherwise the markdown template rendered through the text components. Messages
-built from a single HTML view have no text part and say so.
+Both mailable styles work: `envelope()`/`content()` and the older `build()`.
 
 ### Other channels
 
 Mail is the only channel rendered as a message. Every other one is shown as the
-JSON payload it would hand its provider — a payload dump, not a Slack or SMS
-mock-up. Opt them in through the config:
+JSON payload it would hand its provider. Opt them in:
 
 ```php
 'channels' => ['mail', 'database', 'smsapi'],
 ```
 
-A notification then gains one tab per channel its `via()` declares and the config
-lists. Names match both driver strings and channel classes, so `smsapi` also
-covers an `SmsapiChannel::class` in `via()`. The payload comes from the matching
-`to{Channel}()` method, with `database` falling back to `toArray()` the way
-Laravel's own channel does.
+Each notification gains one tab per channel its `via()` declares. Names match
+driver strings and channel classes alike, so `smsapi` also covers an
+`SmsapiChannel::class`.
 
-### Who may open it
+### Authorization
 
-The preview's routes are never registered in the production environment. Everywhere
-else everybody may open it, until you say otherwise:
+Everybody outside production may open the preview, until you say otherwise:
 
 ```php
 use pxlrbt\LaravelNotificationPreview\Facades\NotificationPreview;
@@ -125,20 +103,10 @@ everything below it:
 ],
 ```
 
-## Argument resolution
-
-For each constructor parameter the preview tries, in order:
-
-1. A value edited in the UI (scalars, enums and dates only).
-2. A registered resolver for the parameter reference, then for its type.
-3. The parameter's default value.
-4. A value derived from the type — enums use their first case, dates use `now()`,
-   models use `Model::factory()->make()` and fall back to `Model::query()->first()`,
-   collections come back empty, anything else is resolved from the container.
-5. A faked scalar derived from the parameter name — `$email`, `$url`, `$name` and
-   `$*Id` get plausible values, everything else gets `'Sample text'`.
-
 ## Supplying your own data
+
+Constructor arguments are resolved from their types, so most classes need no
+setup at all. Register the rest.
 
 ### Resolvers
 
@@ -169,8 +137,7 @@ NotificationPreview::notifiable(fn () => User::factory()->make(['id' => 1]));
 ### Variants
 
 When a notification needs more than constructor arguments — setters, a specific
-state, a particular payload — register named variants. A variant returns the
-finished notification and skips argument resolution entirely:
+state, a particular payload — register named variants:
 
 ```php
 NotificationPreview::variants(OrderCancelled::class, [
@@ -192,7 +159,7 @@ NotificationPreview::variants(OrderShipped::class, [
 
 ### Variants on the notification itself
 
-If you would rather keep the preview data next to the notification, add a static
+To keep the preview data next to the notification, add a static
 `previewVariants()` method. No interface to implement, no import needed:
 
 ```php
