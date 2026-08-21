@@ -42,17 +42,25 @@ class NotificationViewerController extends Controller
     public function preview(Request $request): Response
     {
         $class = $this->validatedClass($request);
+        $asText = $request->input('format') === 'text';
 
         try {
-            $html = $this->build($request, $class)['html'];
+            if ($asText) {
+                $text = $this->buildText($request, $class);
+
+                return response($text ?? 'This message has no plain-text part.')
+                    ->header('Content-Type', 'text/plain; charset=UTF-8');
+            }
+
+            $body = $this->build($request, $class)['html'];
         } catch (Throwable $exception) {
             /** @var view-string $view */
             $view = 'notification-viewer::error';
 
-            $html = view($view, ['exception' => $exception])->render();
+            $body = view($view, ['exception' => $exception])->render();
         }
 
-        return response($html)->header('Content-Type', 'text/html; charset=UTF-8');
+        return response($body)->header('Content-Type', 'text/html; charset=UTF-8');
     }
 
     public function send(Request $request): RedirectResponse
@@ -86,6 +94,27 @@ class NotificationViewerController extends Controller
      */
     protected function build(Request $request, string $class): array
     {
+        [$previewable, $notifiable] = $this->resolve($request, $class);
+
+        return $this->renderer->render($previewable, $notifiable);
+    }
+
+    /**
+     * @param  class-string  $class
+     */
+    protected function buildText(Request $request, string $class): ?string
+    {
+        [$previewable, $notifiable] = $this->resolve($request, $class);
+
+        return $this->renderer->text($previewable, $notifiable);
+    }
+
+    /**
+     * @param  class-string  $class
+     * @return array{0: object, 1: object}
+     */
+    protected function resolve(Request $request, string $class): array
+    {
         $variation = $request->input('variation') ?: null;
         $variation = is_string($variation) ? $variation : null;
 
@@ -101,7 +130,7 @@ class NotificationViewerController extends Controller
             }
         }
 
-        return $this->renderer->render($previewable, $notifiable);
+        return [$previewable, $notifiable];
     }
 
     /**

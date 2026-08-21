@@ -58,6 +58,11 @@ Mailables are handled the same way as notifications throughout — both styles
 (`envelope()`/`content()` and the older `build()`) report their subject, sender
 and template.
 
+The preview has an HTML/Text switch. The text side renders the plain-text
+alternative the mail channel would send: a `->text()` view when there is one,
+otherwise the markdown template rendered through the text components. Messages
+built from a single HTML view have no text part and say so.
+
 ### Hiding classes
 
 `exclude` takes fully qualified class names and namespaces. A namespace hides

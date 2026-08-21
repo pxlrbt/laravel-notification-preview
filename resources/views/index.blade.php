@@ -75,7 +75,12 @@
             </div>
 
             <div class="nv-pane" id="nv-pane-preview">
-                <button type="button" class="nv-button nv-copy-floating" id="nv-copy" data-tooltip="Copy the rendered HTML">
+                <div class="nv-segmented nv-format-floating" id="nv-format" role="group" aria-label="Body">
+                    <button type="button" data-format="html">HTML</button>
+                    <button type="button" data-format="text">Text</button>
+                </div>
+
+                <button type="button" class="nv-button nv-copy-floating" id="nv-copy" data-tooltip="Copy the rendered body">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>
                     </svg>
@@ -134,6 +139,7 @@
                 selected: ENTRIES[0] || null,
                 variation: null,
                 pane: 'preview',
+                format: 'html',
                 viewport: 'desktop',
                 search: '',
                 kind: 'all',
@@ -153,6 +159,7 @@
                 const url = new URL(PREVIEW_URL, window.location.origin);
                 url.searchParams.set('class', state.selected.class);
                 if (state.variation) url.searchParams.set('variation', state.variation);
+                if (state.format === 'text') url.searchParams.set('format', 'text');
                 if (locale()) url.searchParams.set('locale', locale());
                 Object.entries(state.values).forEach(([name, value]) => {
                     if (value !== null && value !== undefined) {
@@ -412,6 +419,12 @@
                     // An opaque <body> paints the whole frame, hiding the colour we just picked.
                     doc.documentElement.style.background = 'transparent';
                     doc.body.style.background = 'transparent';
+
+                    /*
+                     * Plain text starts hard against the top-left corner, where the
+                     * floating controls sit. HTML mails keep their own exact layout.
+                     */
+                    doc.body.style.padding = state.format === 'text' ? '54px 16px 16px' : '';
                 } catch (error) {
                     color = '';
                 }
@@ -428,6 +441,12 @@
                 });
                 el('nv-pane-preview').hidden = state.pane !== 'preview';
                 el('nv-pane-details').hidden = state.pane !== 'details';
+
+                document.querySelectorAll('[data-format]').forEach((button) => {
+                    button.setAttribute('aria-pressed', String(button.dataset.format === state.format));
+                });
+                el('nv-copy').querySelector('span').textContent =
+                    state.format === 'text' ? 'Copy text' : 'Copy HTML';
 
                 document.querySelectorAll('[data-viewport]').forEach((button) => {
                     button.setAttribute('aria-pressed', String(button.dataset.viewport === state.viewport));
@@ -484,6 +503,14 @@
                 button.addEventListener('click', () => {
                     state.viewport = button.dataset.viewport;
                     renderPane();
+                });
+            });
+
+            document.querySelectorAll('[data-format]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    state.format = button.dataset.format;
+                    renderPane();
+                    refreshPreview();
                 });
             });
 

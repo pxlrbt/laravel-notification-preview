@@ -7,6 +7,7 @@ use pxlrbt\LaravelNotificationViewer\NotificationFactory;
 use pxlrbt\LaravelNotificationViewer\NotificationInspector;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail\InvoiceReady;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail\LegacyWelcome;
+use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Mail\MarkdownReceipt;
 use pxlrbt\LaravelNotificationViewer\Tests\Fixtures\Notifications\Nested\DeepNotification;
 
 it('builds a mailable from its constructor like a notification', function () {
@@ -62,4 +63,24 @@ it('sends a mailable as a test mail', function () {
 
     expect($sent->getSubject())->toBe('Invoice ORD-1001 is ready')
         ->and($sent->getHtmlBody())->toContain('invoice ORD-1001 is ready');
+});
+
+it('renders the plain text part of a markdown mailable', function () {
+    $this->get('/dev/notifications/preview?'.http_build_query([
+        'class' => MarkdownReceipt::class,
+        'format' => 'text',
+    ]))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertSee('Thanks for your order.', escape: false);
+});
+
+it('reports when a mailable has no plain text part', function () {
+    // Plain view mailables carry html only.
+    $this->get('/dev/notifications/preview?'.http_build_query([
+        'class' => InvoiceReady::class,
+        'format' => 'text',
+    ]))
+        ->assertOk()
+        ->assertSee('no plain-text part', escape: false);
 });

@@ -77,3 +77,19 @@ it('carries ui overrides into the sent mail', function () {
 
     expect($sent->getSubject())->toBe('Tone: formal');
 });
+
+it('renders the plain text part of a notification', function () {
+    $this->get('/dev/notifications/preview?'.http_build_query([
+        'class' => DeepNotification::class,
+        'format' => 'text',
+    ]))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/plain; charset=UTF-8')
+        ->assertSee('Nested notification.');
+});
+
+it('keeps serving html when no format is asked for', function () {
+    $this->get('/dev/notifications/preview?class='.urlencode(DeepNotification::class))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'text/html; charset=UTF-8');
+});

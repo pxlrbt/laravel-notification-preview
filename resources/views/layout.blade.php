@@ -333,22 +333,31 @@
 
         #nv-pane-preview { position: relative; overflow: hidden; }
 
+        .nv-format-floating,
         .nv-copy-floating {
             position: absolute;
             top: 12px;
-            right: 12px;
             z-index: 1;
             height: 30px;
-            padding: 0 11px;
             background: rgb(255 255 255 / 0.9);
             backdrop-filter: blur(6px);
             box-shadow: 0 1px 3px rgb(0 0 0 / 0.1);
-            opacity: 0.35;
-            transition: opacity 0.15s;
         }
 
-        #nv-pane-preview:hover .nv-copy-floating,
-        .nv-copy-floating:focus-visible { opacity: 1; }
+        .nv-format-floating {
+            left: 12px;
+            padding: 3px;
+        }
+
+        .nv-format-floating button {
+            padding: 0 10px;
+            font-size: 13px;
+        }
+
+        .nv-copy-floating {
+            right: 12px;
+            padding: 0 11px;
+        }
 
         .nv-frame-wrap {
             height: 100%;
